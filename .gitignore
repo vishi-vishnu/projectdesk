@@ -46,3 +46,6 @@ test-results/
 *service-account*.json
 *-sa.json
 sa.json
+
+# Git bundle used to hand over history
+*.bundle
