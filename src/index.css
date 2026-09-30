@@ -1,0 +1,109 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Surfaces */
+  --color-canvas: #f5f5f2;
+  --color-surface: #ffffff;
+  --color-subtle: #f0f0ec;
+  --color-muted: #e9e9e4;
+  --color-line: #e2e2dc;
+  --color-line-strong: #cfcfc7;
+
+  /* Text */
+  --color-ink: #1a1c1e;
+  --color-ink-2: #43474c;
+  --color-ink-3: #666a70;
+
+  /* Brand — a sober ink blue */
+  --color-brand: #1f4f99;
+  --color-brand-hover: #183f7b;
+  --color-brand-soft: #e9eff8;
+  --color-brand-line: #c3d3ea;
+
+  /* Status */
+  --color-ok: #17663d;
+  --color-ok-soft: #e7f3ec;
+  --color-ok-line: #bfdcca;
+  --color-warn: #8a4f00;
+  --color-warn-soft: #fbf2e2;
+  --color-warn-line: #ecd3a6;
+  --color-bad: #a8261c;
+  --color-bad-soft: #fbeceb;
+  --color-bad-line: #efc4bf;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  --shadow-card: 0 1px 2px rgb(20 20 18 / 0.04);
+  --shadow-pop: 0 8px 24px -6px rgb(20 20 18 / 0.16), 0 2px 6px rgb(20 20 18 / 0.06);
+
+  --animate-fade-in: fade-in 150ms ease-out;
+  --animate-pop-in: pop-in 160ms ease-out;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(4px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-canvas text-ink font-sans text-[14px] leading-[1.55];
+  }
+
+  ::selection {
+    background: var(--color-brand-soft);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+  }
+
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  a[href],
+  label[for],
+  summary {
+    cursor: pointer;
+  }
+
+  /* Avoid iOS zoom on focus */
+  @media (max-width: 640px) {
+    input,
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
