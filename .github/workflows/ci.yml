@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint, type-check, unit tests, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+          retention-days: 7
+
+  rules:
+    name: Firestore security rules
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/firebase/emulators
+          key: firebase-emulators-${{ hashFiles('package-lock.json') }}
+      - run: npm ci
+      - run: npm run test:rules
+
+  e2e:
+    name: End-to-end (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7
+
+  deploy-rules:
+    name: Deploy Firestore rules & indexes
+    needs: [quality, rules, e2e]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      HAS_CREDENTIALS: ${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' }}
+    steps:
+      - uses: actions/checkout@v4
+        if: env.HAS_CREDENTIALS == 'true'
+      - uses: actions/setup-node@v4
+        if: env.HAS_CREDENTIALS == 'true'
+        with:
+          node-version: 22
+          cache: npm
+      - name: Deploy
+        if: env.HAS_CREDENTIALS == 'true'
+        run: |
+          npm ci
+          printf '%s' "$SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
+          npx firebase deploy --only firestore:rules,firestore:indexes \
+            --project "$FIREBASE_PROJECT_ID" --non-interactive
+        env:
+          SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+      - name: Skipped
+        if: env.HAS_CREDENTIALS != 'true'
+        run: echo "FIREBASE_SERVICE_ACCOUNT secret not set — skipping rules deploy."
