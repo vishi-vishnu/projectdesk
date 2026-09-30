@@ -1,0 +1,37 @@
+rules_version = '2';
+
+// Used with the Firebase Storage emulator (or a Blaze-plan project).
+// Production on the free plan stores files in Cloudinary instead.
+service firebase.storage {
+  match /b/{bucket}/o {
+    function team(teamId) {
+      return firestore.get(/databases/(default)/documents/teams/$(teamId)).data;
+    }
+    function profile() {
+      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data;
+    }
+    function isActive() {
+      return request.auth != null && profile().status == 'active';
+    }
+
+    match /teams/{teamId}/submissions/{submissionId}/{fileName} {
+      allow read: if isActive()
+        && (request.auth.uid in team(teamId).memberIds
+            || (team(teamId).guideId == request.auth.uid && profile().role == 'faculty')
+            || profile().role == 'coordinator');
+
+      // Members upload once the topic is approved; a submission's files are
+      // written before its Firestore document, so the folder must be new.
+      allow create: if isActive()
+        && request.auth.uid in team(teamId).memberIds
+        && team(teamId).proposalStatus == 'approved'
+        && !firestore.exists(/databases/(default)/documents/teams/$(teamId)/submissions/$(submissionId))
+        && request.resource.size > 0
+        && request.resource.size <= 15 * 1024 * 1024
+        && request.resource.contentType.matches('application/pdf|image/(png|jpeg|webp)|application/msword|application/vnd\\.ms-powerpoint|application/vnd\\.openxmlformats-officedocument\\..*');
+
+      // Submitted files are immutable — a resubmission creates a new version.
+      allow update, delete: if false;
+    }
+  }
+}

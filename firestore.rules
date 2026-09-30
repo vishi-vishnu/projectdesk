@@ -1,0 +1,312 @@
+rules_version = '2';
+
+// ProjectDesk — Firestore security rules
+// The UI hides actions a user cannot take, but these rules are the real
+// enforcement: every write is checked here, server-side.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- helpers ----------
+    function signedIn() { return request.auth != null; }
+    function uid() { return request.auth.uid; }
+
+    function userPath(id) { return /databases/$(database)/documents/users/$(id); }
+    function teamPath(id) { return /databases/$(database)/documents/teams/$(id); }
+    function cyclePath(id) { return /databases/$(database)/documents/cycles/$(id); }
+
+    function me() { return get(userPath(uid())).data; }
+    function isActive() { return signedIn() && exists(userPath(uid())) && me().status == 'active'; }
+    function hasRole(role) { return isActive() && me().role == role; }
+    function isCoordinator() { return hasRole('coordinator'); }
+    function isFaculty() { return hasRole('faculty'); }
+    function isStudent() { return hasRole('student'); }
+
+    function teamData(teamId) { return get(teamPath(teamId)).data; }
+    function isMemberOf(team) { return signedIn() && uid() in team.memberIds; }
+    function isGuideOf(team) { return signedIn() && team.guideId == uid() && isFaculty(); }
+    function canAccessTeam(team) { return isMemberOf(team) || isGuideOf(team) || isCoordinator(); }
+
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function changedKeys() { return incoming().diff(existing()).affectedKeys(); }
+    function onlyChanged(keys) { return changedKeys().hasOnly(keys); }
+    function touched() { return incoming().updatedAt == request.time; }
+    function isText(value, min, max) { return value is string && value.size() >= min && value.size() <= max; }
+    function optionalText(data, field, max) { return !(field in data) || isText(data[field], 0, max); }
+    function myName() { return me().name; }
+
+    // ---------- users ----------
+    match /users/{userId} {
+      // Self; staff read anyone; anyone reads staff; students read their own teammates.
+      allow get: if (signedIn() && uid() == userId)
+        || (isActive() && (me().role != 'student'
+                           || existing().role != 'student'
+                           || (me().teamId != null && existing().teamId == me().teamId)));
+      allow list: if isCoordinator();
+
+      // Students are active on sign-up; faculty must wait for coordinator approval.
+      // Nobody can self-register as a coordinator.
+      allow create: if signedIn() && uid() == userId
+        && incoming().keys().hasOnly(['name', 'email', 'role', 'status', 'department', 'regNo', 'designation', 'teamId', 'createdAt'])
+        && isText(incoming().name, 2, 80)
+        && incoming().email == request.auth.token.email.lower()
+        && isText(incoming().department, 2, 80)
+        && optionalText(incoming(), 'regNo', 40)
+        && optionalText(incoming(), 'designation', 80)
+        && incoming().teamId == null
+        && incoming().createdAt == request.time
+        && ((incoming().role == 'student' && incoming().status == 'active')
+            || (incoming().role == 'faculty' && incoming().status == 'pending'));
+
+      allow update: if
+        // own profile details
+        (signedIn() && uid() == userId
+          && onlyChanged(['name', 'department', 'regNo', 'designation'])
+          && isText(incoming().name, 2, 80)
+          && isText(incoming().department, 2, 80)
+          && optionalText(incoming(), 'regNo', 40)
+          && optionalText(incoming(), 'designation', 80))
+        // own team link — must agree with the team document after the batch
+        || (signedIn() && uid() == userId && onlyChanged(['teamId']) && validOwnTeamLink(userId))
+        // team lead removing a member
+        || (signedIn() && onlyChanged(['teamId'])
+          && existing().teamId != null && incoming().teamId == null
+          && getAfter(teamPath(existing().teamId)).data.leadId == uid()
+          && !(userId in getAfter(teamPath(existing().teamId)).data.memberIds))
+        // coordinator approvals and role management
+        || (isCoordinator() && onlyChanged(['status', 'role', 'department', 'designation'])
+          && optionalText(incoming(), 'designation', 80)
+          && incoming().status in ['active', 'pending', 'rejected']
+          && incoming().role in ['student', 'faculty', 'coordinator']);
+
+      allow delete: if false;
+
+      function validOwnTeamLink(id) {
+        return (existing().teamId == null && incoming().teamId is string
+                && id in getAfter(teamPath(incoming().teamId)).data.memberIds)
+            || (existing().teamId != null && incoming().teamId == null
+                && !(id in getAfter(teamPath(existing().teamId)).data.memberIds));
+      }
+    }
+
+    // ---------- project cycles (academic batches) ----------
+    match /cycles/{cycleId} {
+      allow read: if isActive();
+      allow create, update: if isCoordinator()
+        && isText(incoming().name, 3, 100)
+        && incoming().maxTeamSize is int && incoming().maxTeamSize >= 1 && incoming().maxTeamSize <= 6
+        && incoming().reviews is list && incoming().reviews.size() >= 1 && incoming().reviews.size() <= 8
+        && incoming().isActive is bool;
+      allow delete: if false;
+    }
+
+    // ---------- join codes ----------
+    // Readable one at a time (knowing the code is the secret); never listable.
+    match /joinCodes/{code} {
+      allow get: if isActive();
+      allow list: if false;
+      allow create: if isStudent()
+        && incoming().keys().hasOnly(['teamId', 'teamName', 'cycleId', 'leadName'])
+        && getAfter(teamPath(incoming().teamId)).data.leadId == uid()
+        && getAfter(teamPath(incoming().teamId)).data.joinCode == code
+        && getAfter(teamPath(incoming().teamId)).data.name == incoming().teamName
+        && getAfter(teamPath(incoming().teamId)).data.cycleId == incoming().cycleId
+        && incoming().leadName == myName();
+      allow update: if signedIn() && onlyChanged(['teamName'])
+        && teamData(existing().teamId).leadId == uid()
+        && getAfter(teamPath(existing().teamId)).data.name == incoming().teamName;
+      allow delete: if false;
+    }
+
+    // ---------- teams ----------
+    match /teams/{teamId} {
+      allow read: if canAccessTeam(existing());
+
+      allow create: if isStudent()
+        && me().teamId == null
+        && incoming().keys().hasOnly(['cycleId', 'name', 'leadId', 'memberIds', 'guideId', 'joinCode', 'project',
+                                      'proposalStatus', 'proposalRemarks', 'createdAt', 'updatedAt'])
+        && isText(incoming().name, 2, 60)
+        && incoming().leadId == uid()
+        && incoming().memberIds == [uid()]
+        && incoming().guideId == null
+        && incoming().proposalStatus == 'draft'
+        && get(cyclePath(incoming().cycleId)).data.isActive == true
+        && getAfter(/databases/$(database)/documents/joinCodes/$(incoming().joinCode)).data.teamId == teamId
+        // the creator's profile must be linked in the same batch (one team per student)
+        && getAfter(userPath(uid())).data.teamId == teamId
+        && incoming().createdAt == request.time
+        && touched();
+
+      allow update: if touched() && (
+        leadEditsProject() || leadSubmitsProposal() || leadRemovesMember()
+        || memberLeaves() || studentJoins() || guideReviewsProposal() || coordinatorManages()
+      );
+
+      allow delete: if false;
+
+      function isLead() { return signedIn() && existing().leadId == uid(); }
+
+      function leadEditsProject() {
+        return isLead() && onlyChanged(['name', 'project', 'updatedAt'])
+          && existing().proposalStatus in ['draft', 'changes_requested']
+          && isText(incoming().name, 2, 60)
+          && isText(incoming().project.title, 0, 150)
+          && isText(incoming().project.abstract, 0, 3000)
+          && incoming().project.techStack is list && incoming().project.techStack.size() <= 12;
+      }
+
+      function leadSubmitsProposal() {
+        return isLead() && onlyChanged(['proposalStatus', 'updatedAt'])
+          && existing().proposalStatus in ['draft', 'changes_requested']
+          && incoming().proposalStatus == 'submitted'
+          && existing().project.title.size() >= 5
+          && existing().project.abstract.size() >= 50;
+      }
+
+      function leadRemovesMember() {
+        return isLead() && onlyChanged(['memberIds', 'updatedAt'])
+          && uid() in incoming().memberIds
+          && existing().memberIds.hasAll(incoming().memberIds)
+          && incoming().memberIds.size() == existing().memberIds.size() - 1;
+      }
+
+      function memberLeaves() {
+        return isMemberOf(existing()) && !isLead() && onlyChanged(['memberIds', 'updatedAt'])
+          && !(uid() in incoming().memberIds)
+          && existing().memberIds.hasAll(incoming().memberIds)
+          && incoming().memberIds.size() == existing().memberIds.size() - 1;
+      }
+
+      // Joining requires the team's secret join code, a free slot, and the
+      // student not already being in a team.
+      function studentJoins() {
+        return isStudent() && me().teamId == null
+          && !(uid() in existing().memberIds)
+          && onlyChanged(['memberIds', 'lastJoin', 'updatedAt'])
+          // proof is tied to the joining user, so a stored value can't be reused
+          && incoming().lastJoin == {'uid': uid(), 'code': existing().joinCode}
+          && getAfter(userPath(uid())).data.teamId == teamId
+          && incoming().memberIds.hasAll(existing().memberIds)
+          && uid() in incoming().memberIds
+          && incoming().memberIds.size() == existing().memberIds.size() + 1
+          && incoming().memberIds.size() <= get(cyclePath(existing().cycleId)).data.maxTeamSize;
+      }
+
+      function guideReviewsProposal() {
+        return isGuideOf(existing())
+          && onlyChanged(['proposalStatus', 'proposalRemarks', 'updatedAt'])
+          && existing().proposalStatus == 'submitted'
+          && incoming().proposalStatus in ['approved', 'changes_requested']
+          && isText(incoming().proposalRemarks, 0, 2000);
+      }
+
+      function coordinatorManages() {
+        return isCoordinator()
+          && onlyChanged(['guideId', 'proposalStatus', 'proposalRemarks', 'updatedAt'])
+          && incoming().proposalStatus in ['draft', 'submitted', 'approved', 'changes_requested']
+          && isText(incoming().proposalRemarks, 0, 2000)
+          && (!('guideId' in changedKeys())
+              || incoming().guideId == null
+              || (get(userPath(incoming().guideId)).data.role == 'faculty'
+                  && get(userPath(incoming().guideId)).data.status == 'active'));
+      }
+
+      // ----- review submissions -----
+      match /submissions/{submissionId} {
+        allow read: if canAccessTeam(teamData(teamId));
+
+        allow create: if isMemberOf(teamData(teamId))
+          && teamData(teamId).proposalStatus == 'approved'
+          && incoming().keys().hasOnly(['teamId', 'cycleId', 'reviewId', 'version', 'title', 'notes', 'files',
+                                        'submittedBy', 'submittedByName', 'status', 'evaluation', 'createdAt'])
+          && incoming().teamId == teamId
+          && incoming().cycleId == teamData(teamId).cycleId
+          && isText(incoming().reviewId, 1, 20)
+          && incoming().version is int && incoming().version >= 1 && incoming().version <= 50
+          && isText(incoming().title, 3, 150)
+          && isText(incoming().notes, 0, 3000)
+          && incoming().files is list && incoming().files.size() >= 1 && incoming().files.size() <= 6
+          && validFileAt(incoming().files, 0) && validFileAt(incoming().files, 1) && validFileAt(incoming().files, 2)
+          && validFileAt(incoming().files, 3) && validFileAt(incoming().files, 4) && validFileAt(incoming().files, 5)
+          && incoming().submittedBy == uid()
+          && incoming().submittedByName == myName()
+          && incoming().status == 'submitted'
+          && incoming().evaluation == null
+          && incoming().createdAt == request.time;
+
+        // Only the assigned guide (or a coordinator) grades a submission.
+        allow update: if (isGuideOf(teamData(teamId)) || isCoordinator())
+          && onlyChanged(['status', 'evaluation'])
+          && incoming().status in ['accepted', 'changes_requested']
+          && incoming().evaluation.marks is number
+          && incoming().evaluation.marks >= 0 && incoming().evaluation.marks <= 100
+          && isText(incoming().evaluation.remarks, 0, 3000)
+          && incoming().evaluation.evaluatedBy == uid()
+          && incoming().evaluation.evaluatedByName == myName()
+          && incoming().evaluation.evaluatedAt == request.time;
+
+        allow delete: if false;
+
+        match /comments/{commentId} {
+          allow read: if canAccessTeam(teamData(teamId));
+          allow create: if canAccessTeam(teamData(teamId)) && validComment()
+            && exists(/databases/$(database)/documents/teams/$(teamId)/submissions/$(submissionId));
+          allow update: if canAccessTeam(teamData(teamId)) && onlyChanged(['resolved']) && incoming().resolved is bool;
+          allow delete: if canAccessTeam(teamData(teamId)) && existing().authorId == uid();
+        }
+      }
+
+      // ----- team discussion / doubts -----
+      match /discussion/{commentId} {
+        allow read: if canAccessTeam(teamData(teamId));
+        allow create: if canAccessTeam(teamData(teamId)) && validComment();
+        allow update: if canAccessTeam(teamData(teamId)) && onlyChanged(['resolved']) && incoming().resolved is bool;
+        allow delete: if canAccessTeam(teamData(teamId)) && existing().authorId == uid();
+      }
+
+      // ----- activity log (append-only) -----
+      match /activity/{activityId} {
+        allow read: if canAccessTeam(teamData(teamId));
+        // getAfter: the team may be created, or the actor may leave, in the same batch.
+        allow create: if (canAccessTeam(teamData(teamId)) || canAccessTeam(getAfter(teamPath(teamId)).data))
+          && incoming().keys().hasOnly(['type', 'actorId', 'actorName', 'message', 'createdAt'])
+          && incoming().actorId == uid()
+          && incoming().actorName == myName()
+          && incoming().type in ['team_created', 'member_joined', 'member_left', 'proposal_submitted',
+                                 'proposal_reviewed', 'submission_created', 'submission_evaluated', 'guide_assigned']
+          && isText(incoming().message, 1, 300)
+          && incoming().createdAt == request.time;
+        allow update, delete: if false;
+      }
+    }
+
+    // Files are stored in Firebase Storage or Cloudinary (or ship with the app as demo samples).
+    function validFileAt(files, i) {
+      return files.size() <= i || (
+        files[i].keys().hasOnly(['name', 'url', 'path', 'size', 'contentType', 'provider'])
+        && isText(files[i].name, 1, 200)
+        && files[i].size is number && files[i].size <= 15 * 1024 * 1024
+        && files[i].provider in ['firebase', 'cloudinary', 'static']
+        && files[i].url.matches('^(https://firebasestorage\\.googleapis\\.com/|https://res\\.cloudinary\\.com/|http://(127\\.0\\.0\\.1|localhost):9199/|/samples/).*'));
+    }
+
+    function validComment() {
+      return request.resource.data.keys().hasOnly(['authorId', 'authorName', 'authorRole', 'body', 'kind', 'resolved', 'createdAt'])
+        && request.resource.data.authorId == request.auth.uid
+        && request.resource.data.authorName == me().name
+        && request.resource.data.authorRole == me().role
+        && request.resource.data.body is string
+        && request.resource.data.body.size() >= 1 && request.resource.data.body.size() <= 2000
+        && request.resource.data.kind in ['comment', 'doubt']
+        && request.resource.data.resolved == false
+        && request.resource.data.createdAt == request.time;
+    }
+
+    // Coordinators can query all submissions across teams (progress matrix).
+    match /{path=**}/submissions/{submissionId} {
+      allow read: if isCoordinator();
+    }
+  }
+}
