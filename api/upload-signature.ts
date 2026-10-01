@@ -1,14 +1,14 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { isValidTeamId, signParams, teamFolder } from './_lib/cloudinary.js'
 import { bearerToken, verifyIdToken } from './_lib/firebaseAuth.js'
 import { fetchTeamMemberIds } from './_lib/firestore.js'
+import type { ApiRequest, ApiResponse } from './_lib/http.js'
 
 /**
  * POST /api/upload-signature  { teamId }
  * Returns a Cloudinary upload signature restricted to the team's folder,
  * only if the caller is a signed-in member of that team.
  */
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: ApiRequest, res: ApiResponse) {
   res.setHeader('Cache-Control', 'no-store')
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST')
