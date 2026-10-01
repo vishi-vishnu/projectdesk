@@ -6,16 +6,20 @@ import {
   type RulesTestEnvironment,
 } from '@firebase/rules-unit-testing'
 import {
+  addDoc,
   arrayUnion,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
+  query,
   serverTimestamp,
   setDoc,
   setLogLevel,
   Timestamp,
   updateDoc,
+  where,
   writeBatch,
   type Firestore,
 } from 'firebase/firestore'
@@ -151,6 +155,14 @@ describe('user profiles', () => {
   it('only lets coordinators list all users', async () => {
     await assertFails(getDocs(collection(as('outsider'), 'users')))
     await assertSucceeds(getDocs(collection(as('coord'), 'users')))
+  })
+
+  it('lets any active user list active guides, and nothing more', async () => {
+    const db = as('outsider')
+    const guides = query(collection(db, 'users'), where('role', '==', 'faculty'), where('status', '==', 'active'))
+    await assertSucceeds(getDocs(guides))
+    await assertFails(getDocs(query(collection(db, 'users'), where('role', '==', 'faculty'))))
+    await assertFails(getDocs(query(collection(db, 'users'), where('role', '==', 'student'), where('status', '==', 'active'))))
   })
 
   it('keeps pending faculty out of the app data', async () => {
@@ -358,5 +370,70 @@ describe('comments and activity', () => {
     await assertFails(setDoc(doc(as('member'), 'teams/t1/activity/a2'), { ...entry, actorName: 'Test faculty' }))
     await assertFails(setDoc(doc(as('member'), 'teams/t1/activity/a3'), { ...entry, type: 'grade_changed' }))
     await assertFails(updateDoc(doc(as('member'), 'teams/t1/activity/a1'), { message: 'rewritten' }))
+  })
+})
+
+describe('preferred guide', () => {
+  const draft = async () =>
+    env.withSecurityRulesDisabled(async (ctx) => {
+      await updateDoc(doc(ctx.firestore() as unknown as Firestore, 'teams/t1'), { proposalStatus: 'draft', guideId: null })
+    })
+  const project = (preferredGuideId: unknown) => ({
+    project: { title: 'A sufficiently long project title', abstract: 'x'.repeat(80), domain: 'IoT', techStack: [], preferredGuideId },
+    updatedAt: serverTimestamp(),
+  })
+
+  it('accepts an active guide or no preference', async () => {
+    await draft()
+    await assertSucceeds(updateDoc(doc(as('lead'), 'teams/t1'), project('guide')))
+    await assertSucceeds(updateDoc(doc(as('lead'), 'teams/t1'), project(null)))
+  })
+
+  it('rejects pending faculty, students and unknown ids', async () => {
+    await draft()
+    await assertFails(updateDoc(doc(as('lead'), 'teams/t1'), project('pending')))
+    await assertFails(updateDoc(doc(as('lead'), 'teams/t1'), project('member')))
+    await assertFails(updateDoc(doc(as('lead'), 'teams/t1'), project('nobody')))
+  })
+
+  it('rejects extra fields inside the project', async () => {
+    await draft()
+    await assertFails(
+      updateDoc(doc(as('lead'), 'teams/t1'), {
+        project: { title: 'A sufficiently long project title', abstract: '', domain: '', techStack: [], marks: 100 },
+        updatedAt: serverTimestamp(),
+      }),
+    )
+  })
+})
+
+describe('announcements', () => {
+  const notice = (extra: Record<string, unknown> = {}) => ({
+    title: 'Review 2 moved',
+    body: 'Review 2 is now on Friday.',
+    audience: 'all',
+    authorId: 'coord',
+    authorName: 'Test coordinator',
+    createdAt: serverTimestamp(),
+    ...extra,
+  })
+
+  it('lets only the coordinator post, with their own name', async () => {
+    await assertSucceeds(addDoc(collection(as('coord'), 'announcements'), notice()))
+    await assertFails(addDoc(collection(as('coord'), 'announcements'), notice({ authorName: 'Someone else' })))
+    await assertFails(addDoc(collection(as('coord'), 'announcements'), notice({ audience: 'parents' })))
+    await assertFails(addDoc(collection(as('guide'), 'announcements'), notice({ authorId: 'guide', authorName: 'Test faculty' })))
+    await assertFails(addDoc(collection(as('lead'), 'announcements'), notice({ authorId: 'lead', authorName: 'Test student' })))
+  })
+
+  it('is readable by active users only', async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore() as unknown as Firestore, 'announcements/a1'), { ...notice(), createdAt: ts })
+    })
+    await assertSucceeds(getDoc(doc(as('outsider'), 'announcements/a1')))
+    await assertFails(getDoc(doc(as('pending'), 'announcements/a1')))
+    await assertFails(updateDoc(doc(as('coord'), 'announcements/a1'), { title: 'Changed title' }))
+    await assertFails(deleteDoc(doc(as('guide'), 'announcements/a1')))
+    await assertSucceeds(deleteDoc(doc(as('coord'), 'announcements/a1')))
   })
 })
