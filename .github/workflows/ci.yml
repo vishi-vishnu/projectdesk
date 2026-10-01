@@ -90,7 +90,7 @@ jobs:
           npm ci
           printf '%s' "$SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa.json"
           export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
-          npx firebase deploy --only firestore:rules,firestore:indexes \
+          npx -y firebase-tools@15.32.0 deploy --only firestore:rules,firestore:indexes \
             --project "$FIREBASE_PROJECT_ID" --non-interactive
         env:
           SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}

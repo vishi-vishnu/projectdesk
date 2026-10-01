@@ -7,7 +7,7 @@
     "dev": "vite",
     "dev:emulator": "vite --mode emulator",
     "dev:fake": "vite --mode fake",
-    "emulators": "firebase emulators:start --project demo-projectdesk",
+    "emulators": "npx -y firebase-tools@15.32.0 emulators:start --project demo-projectdesk",
     "seed": "tsx scripts/seed.ts",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
@@ -15,7 +15,7 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:rules": "firebase emulators:exec --only firestore --project demo-projectdesk \"vitest run --config vitest.rules.config.ts\"",
+    "test:rules": "npx -y firebase-tools@15.32.0 emulators:exec --only firestore --project demo-projectdesk \"vitest run --config vitest.rules.config.ts\"",
     "test:e2e": "playwright test",
     "check": "npm run lint && npm run typecheck && npm run test"
   },
@@ -51,7 +51,6 @@
     "@vitejs/plugin-react": "^6.1.1",
     "concurrently": "^10.0.5",
     "firebase-admin": "^14.5.0",
-    "firebase-tools": "^15.32.0",
     "jose": "^6.2.12",
     "jsdom": "^26.1.0",
     "oxlint": "^1.81.0",
@@ -61,11 +60,12 @@
     "vite": "^8.3.0",
     "vitest": "^5.0.3"
   },
-  "description": "Final-year project registration and review platform — React, TypeScript, Firebase",
+  "description": "Final-year project registration and review platform \u2014 React, TypeScript, Firebase",
   "engines": {
     "node": ">=22.12"
   },
   "overrides": {
-    "@grpc/grpc-js": "^1.14.5"
+    "@grpc/grpc-js": "^1.14.5",
+    "uuid": "^11.1.1"
   }
 }
