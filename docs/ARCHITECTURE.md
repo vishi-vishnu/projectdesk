@@ -22,7 +22,7 @@ cycles/{cycleId}                name, academicYear, department, isActive, maxTea
                                 reviews: [{ id, title, description, dueDate, maxMarks }]
 joinCodes/{CODE}                teamId, teamName, cycleId, leadName
 teams/{teamId}                  cycleId, name, leadId, memberIds[], guideId, joinCode,
-                                project { title, abstract, domain, techStack[] },
+                                project { title, abstract, domain, techStack[], preferredGuideId? },
                                 proposalStatus (draft|submitted|approved|changes_requested),
                                 proposalRemarks, lastJoin { uid, code }
   submissions/{id}              reviewId, version, title, notes, files[], submittedBy,
@@ -31,6 +31,7 @@ teams/{teamId}                  cycleId, name, leadId, memberIds[], guideId, joi
     comments/{id}               authorId, authorName, authorRole, body, kind (comment|doubt), resolved
   discussion/{id}               same shape as comments, one team-wide thread
   activity/{id}                 type, actorId, actorName, message   (append-only)
+announcements/{id}              title, body, audience (all|students|faculty), authorId, authorName
 ```
 
 Why it is shaped like this:
@@ -55,6 +56,9 @@ Why it is shaped like this:
 | Files come from trusted hosts | Each file entry is shape-checked; URL must be Firebase Storage, Cloudinary or bundled samples |
 | Submissions and the activity log are immutable | No team-side update or delete on submissions; activity has no update or delete |
 | Read isolation | Teams, submissions, comments and activity are readable only by members, the assigned guide and coordinators |
+| Guide list for students | Anyone active may list `users`, but only with a query filtered to `role == faculty` and `status == active` |
+| Preferred guide is real | If set, `preferredGuideId` must point to an active faculty profile |
+| Announcements | Only coordinators post or delete; the author name must match the profile; no edits |
 
 These rules are covered by `tests/rules/firestore.rules.test.ts` against the Firestore emulator in CI.
 
@@ -80,7 +84,7 @@ These rules are covered by `tests/rules/firestore.rules.test.ts` against the Fir
 | --- | --- | --- |
 | Unit | Vitest | Progress and deadline logic, file validation, CSV escaping (including formula injection), Cloudinary signature (checked against the documented example) |
 | Component | Testing Library | File uploader accepts and rejects files; remove works |
-| Security | rules-unit-testing + emulator | 33 tests, 64 allow and deny checks |
+| Security | rules-unit-testing + emulator | 39 tests, 81 allow and deny checks |
 | End-to-end | Playwright | Full semester journey across three roles, resubmission flow, upload validation, approvals, schedule editing, mobile navigation and overflow |
 
 The E2E suite runs against an in-browser fake of the Firebase SDK (`src/testing/fake`, enabled only in `--mode fake`). It is fast and deterministic, and CI needs no Java. Rules are tested separately against the real emulator.

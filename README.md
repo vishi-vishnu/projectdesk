@@ -37,11 +37,11 @@ I went through this process myself, so I built **ProjectDesk** to put the whole 
 
 | Who | What they can do |
 | --- | --- |
-| **Student** | Create a team and become the team lead, or join a team with a 6-character code. Submit the project topic for approval. Upload PPTs, PDF reports and images for each review. See the guide's comments and marks, and ask doubts in a team discussion. |
+| **Student** | Create a team and become the team lead, or join a team with a 6-character code. Submit the project topic for approval and request a preferred guide. Upload PPTs, PDF reports and images for each review. See the guide's comments and marks, ask doubts in a team discussion, and get a warning when a review deadline is close. |
 | **Faculty guide** | Sign up and wait for the coordinator to approve the account. Approve or return project topics. Work through a review queue where late submissions are flagged. Preview files in the browser, comment, and accept a review with marks or ask for changes. |
-| **Coordinator** | Set up the project cycle: team size, review stages, due dates and marks. Approve faculty accounts, assign a guide to each team, track every team on a progress matrix, and export marks to CSV. |
+| **Coordinator** | Set up the project cycle: team size, review stages, due dates and marks. Approve faculty accounts, assign guides by hand or automatically (preferences first, then an even spread), post announcements, track every team on a progress matrix, and export marks to CSV. |
 
-Everything updates live. When a guide posts feedback, it shows up on the team's screen without a page refresh.
+Everything updates live. When a guide posts feedback, it shows up on the team's screen without a page refresh, and a notification bell lists new announcements and team activity. There is a light and a dark theme.
 
 <div align="center">
   <img src="docs/images/demo.gif" alt="ProjectDesk walkthrough: sign in, create a team, upload review files, guide evaluation and coordinator overview" width="90%" />
@@ -87,11 +87,11 @@ A typical semester looks like this:
 
 1. **The coordinator opens a project cycle.** On *Review schedule*, they set the team size and the four review stages with due dates and marks.
 2. **Students register and form teams.** One student creates the team and shares the join code. Teammates enter the code to join.
-3. **Faculty register and get approved.** The coordinator approves them on *People*, then assigns a guide to each team on *Teams*.
+3. **Faculty register and get approved.** The coordinator approves them on *People*, then assigns a guide to each team on *Teams*, one by one or with *Auto-assign guides*.
 4. **The team submits its topic.** The team lead fills in the title, abstract and tools on *Proposal* and submits it. The guide approves it or sends it back with remarks.
 5. **The team uploads each review.** On *Reviews*, any member uploads files (PDF, PPT/PPTX, DOC/DOCX, PNG, JPG, WEBP, up to 10 MB each). A resubmission becomes a new version, and old versions are kept.
 6. **The guide reviews it.** The guide previews the files, comments, and either accepts the review with marks or requests changes. Students can mark a comment as a doubt, and the guide resolves it.
-7. **The coordinator tracks everyone.** The *Overview* shows a matrix of every team at every stage, and *Export CSV* downloads all the marks.
+7. **The coordinator tracks everyone.** The *Overview* shows a matrix of every team at every stage, a to-do list, and announcements for students or guides. *Export CSV* downloads all the marks.
 
 ## Tech stack
 
@@ -137,9 +137,9 @@ Every push runs the pipeline in [`.github/workflows/ci.yml`](.github/workflows/c
 
 | Layer | What is covered |
 | --- | --- |
-| Unit | Deadline and progress logic, file checks, CSV export, upload signatures |
-| Security rules | 33 tests with 64 allow and deny checks across every collection |
-| End-to-end | A full semester across all three roles, resubmissions, file previews, upload limits, approvals and the mobile layout |
+| Unit | Deadline and progress logic, guide auto-assignment, notifications, file checks, CSV export, upload signatures |
+| Security rules | 39 tests with 81 allow and deny checks across every collection |
+| End-to-end | A full semester across all three roles, resubmissions, file previews, upload limits, approvals, announcements, auto-assignment, password change, dark mode and the mobile layout |
 
 The longest end-to-end test plays out a whole semester. A student registers and creates a team, and a classmate joins with the code. The coordinator assigns a guide, who approves the topic. The student uploads Review 1 and asks a doubt, and the guide replies, resolves it and gives marks.
 
@@ -204,7 +204,7 @@ firestore.rules        Who can read and write what
 
 ## What I would add next
 
-- Email alerts when a guide posts feedback or a deadline is close
+- Email alerts when a guide posts feedback or a deadline is close (the in-app bell already covers this inside the app)
 - A cleanup job for files whose submission failed to save
 - Rate limiting and Firebase App Check on the upload endpoint
 - Support for several departments, each with its own coordinator
