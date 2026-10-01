@@ -29,7 +29,7 @@ teams/{teamId}                  cycleId, name, leadId, memberIds[], guideId, joi
                                 status (submitted|changes_requested|accepted),
                                 evaluation { marks, remarks, evaluatedBy, evaluatedAt }
     comments/{id}               authorId, authorName, authorRole, body, kind (comment|doubt), resolved
-  discussion/{id}               same shape as comments — team-wide thread
+  discussion/{id}               same shape as comments, one team-wide thread
   activity/{id}                 type, actorId, actorName, message   (append-only)
 ```
 
@@ -60,7 +60,7 @@ These rules are covered by `tests/rules/firestore.rules.test.ts` against the Fir
 
 ## File uploads
 
-1. The student picks files. The client validates type (PDF, PPT/PPTX, DOC/DOCX, PNG, JPG, WEBP) and size (15 MB).
+1. The student picks files. The client validates type (PDF, PPT/PPTX, DOC/DOCX, PNG, JPG, WEBP) and size (10 MB, the Cloudinary free plan limit).
 2. `storageProvider.upload()`:
    - **Cloudinary (production):** POST `/api/upload-signature` with the Firebase ID token. The function verifies the token against Google's public keys using `jose`, so no service account is needed. It then reads the team document from the Firestore REST API *as that user*, so security rules decide membership. It returns a short-lived signature scoped to `projectdesk/teams/{teamId}`. The browser uploads directly to Cloudinary with progress events.
    - **Firebase Storage (emulator):** `uploadBytesResumable`, guarded by `storage.rules`.
@@ -80,7 +80,7 @@ These rules are covered by `tests/rules/firestore.rules.test.ts` against the Fir
 | --- | --- | --- |
 | Unit | Vitest | Progress and deadline logic, file validation, CSV escaping (including formula injection), Cloudinary signature (checked against the documented example) |
 | Component | Testing Library | File uploader accepts and rejects files; remove works |
-| Security | rules-unit-testing + emulator | Around 30 allow/deny cases across every collection |
+| Security | rules-unit-testing + emulator | 33 tests, 64 allow and deny checks |
 | End-to-end | Playwright | Full semester journey across three roles, resubmission flow, upload validation, approvals, schedule editing, mobile navigation and overflow |
 
 The E2E suite runs against an in-browser fake of the Firebase SDK (`src/testing/fake`, enabled only in `--mode fake`). It is fast and deterministic, and CI needs no Java. Rules are tested separately against the real emulator.

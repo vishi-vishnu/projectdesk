@@ -1,14 +1,21 @@
-# Deploying ProjectDesk for free
+# Deploy ProjectDesk for free
 
-Everything here fits in free tiers: **Firebase Spark** (Auth and Firestore), **Cloudinary Free** (files), **Vercel Hobby** (hosting and the upload API) and **GitHub** (code and CI). No credit card is needed.
+This guide puts your own copy of ProjectDesk online using free plans only:
 
-It takes about 20 minutes.
+| Service | Plan | Used for | Card needed? |
+| --- | --- | --- | --- |
+| Firebase | Spark (free) | Login and database | No |
+| Cloudinary | Free | Uploaded files (PDF, PPT, images) | No |
+| Vercel | Hobby (free) | Hosting the website and the upload function | No |
+| GitHub | Free | Code and the CI pipeline | No |
+
+It takes about 30 minutes. Do the steps in order.
 
 ---
 
-## 1. Push the code to GitHub
+## Step 1. Put the code on GitHub
 
-1. On github.com, create a new **public** repository called `projectdesk`. Don't add a README, .gitignore or licence.
+1. On github.com, create a new **public** repository called `projectdesk`.
 2. In a terminal inside the project folder, run:
 
    ```bash
@@ -16,96 +23,133 @@ It takes about 20 minutes.
    git push -u origin main
    ```
 
-   If the folder isn't a git repository yet, run `git init -b main && git add . && git commit -m "Initial commit"` first.
+If git signs in with the wrong GitHub account, add your username to the remote URL so it asks for the right one:
 
-Every push to `main` now runs the CI pipeline under the repository's **Actions** tab.
+```bash
+git remote set-url origin https://<your-username>@github.com/<your-username>/projectdesk.git
+```
 
-## 2. Create the Firebase project (Spark plan)
+## Step 2. Create the Firebase project
 
-1. Go to <https://console.firebase.google.com>, choose **Create a project** and name it `projectdesk`. You can turn Google Analytics off.
-2. **Authentication:** choose **Build → Authentication → Get started**, then enable **Email/Password** under **Sign-in method**.
-3. **Firestore:** choose **Build → Firestore Database → Create database**, pick **production mode** and location **asia-south1 (Mumbai)**.
-4. **Web app config:** open **Project settings** (gear icon) → **General** → **Your apps**, click the **</>** icon, register an app called `projectdesk-web`, and copy the `firebaseConfig` values. You'll paste these into Vercel in step 4.
+1. Go to <https://console.firebase.google.com> and sign in with your Google account.
+2. Click **Create a project**, name it `projectdesk`, and continue. You can turn off Google Analytics.
+3. The project starts on the free **Spark** plan. Leave it that way.
+
+### Turn on email and password login
+
+1. In the left menu, open **Build > Authentication** and click **Get started**.
+2. Under **Sign-in method**, choose **Email/Password**, switch on the first toggle and click **Save**.
+
+### Create the database
+
+1. Open **Build > Firestore Database** and click **Create database**.
+2. Choose the **Standard** edition if you are asked.
+3. Pick location **asia-south1 (Mumbai)**, or the region closest to your users. You cannot change this later.
+4. Choose **Start in production mode** and click **Create**.
 
 ### Publish the security rules
 
-Choose either option.
+1. In **Firestore Database**, open the **Rules** tab.
+2. Delete everything there, paste the full contents of [`firestore.rules`](../firestore.rules) and click **Publish**.
+3. Open the **Indexes** tab, then **Single field**, then **Add exemption**:
+   - Collection ID: `submissions`
+   - Field path: `cycleId`
+   - Turn on **Ascending** for **Collection group** scope.
 
-- **Console (no tools needed)**
-  1. Open **Firestore → Rules**, replace the contents with the contents of [`firestore.rules`](../firestore.rules) and click **Publish**.
-  2. Open **Firestore → Indexes → Single field → Add exemption**. Set collection ID `submissions` and field `cycleId`, then enable **Ascending** for *Collection group* scope. The coordinator's progress matrix needs this.
-- **CLI**
+   The coordinator's progress matrix needs this index.
 
-  ```bash
-  npx firebase login
-  npx firebase deploy --only firestore --project <your-project-id>
-  ```
+### Copy the web app keys
 
-### Create the coordinator account
+1. Click the gear icon next to **Project overview**, then **Project settings**.
+2. Under **Your apps**, click the web icon `</>`, name the app `projectdesk-web` and click **Register app**. You don't need Firebase Hosting.
+3. Firebase shows a `firebaseConfig` block. Keep it open; you need these six values in Step 4.
 
-Nobody can register as a coordinator from the app. This is deliberate and enforced by the rules. Pick one of these:
+These values are safe to put in a website. Access is controlled by the security rules, not by keeping them secret.
 
-- **Quick:** sign up in the app as *Faculty*. In **Firestore → Data → users → (your document)**, set `role` to `coordinator` and `status` to `active`.
-- **With demo data (recommended for a portfolio):** open **Project settings → Service accounts → Generate new private key** and save the file outside the project folder. Then run:
+## Step 3. Create the Cloudinary account
 
-  ```powershell
-  # Windows PowerShell
-  $env:GOOGLE_APPLICATION_CREDENTIALS="C:\keys\projectdesk-sa.json"
-  $env:FIREBASE_PROJECT_ID="<your-project-id>"
-  npm run seed -- --production
-  ```
+1. Sign up at <https://cloudinary.com/users/register_free>. The free plan needs no card.
+2. Open the **Dashboard** (or **Settings > API Keys**) and note:
+   - **Cloud name**
+   - **API Key**
+   - **API Secret**. Treat this like a password and never commit it.
+3. Go to **Settings > Security** and turn on **Allow delivery of PDF and ZIP files**. Free accounts block PDF links until you do this.
 
-  ```bash
-  # macOS / Linux
-  GOOGLE_APPLICATION_CREDENTIALS=~/keys/projectdesk-sa.json FIREBASE_PROJECT_ID=<id> npm run seed -- --production
-  ```
+The free plan allows files up to 10 MB, so the app rejects anything bigger.
 
-  This creates the demo coordinator, faculty and student accounts (password `Demo@1234`) and five sample teams. **Never commit the key file.**
+## Step 4. Deploy on Vercel
 
-## 3. Create the Cloudinary account (file storage)
-
-1. Sign up at <https://cloudinary.com/users/register_free>.
-2. On the **Dashboard**, note the **Cloud name**, **API Key** and **API Secret**.
-3. Go to **Settings → Security** and turn on **Allow delivery of PDF and ZIP files**. Free accounts block PDF delivery by default.
-
-## 4. Deploy on Vercel
-
-1. Sign in at <https://vercel.com> with your GitHub account, click **Add New → Project** and import `projectdesk`. The framework is detected as **Vite**.
-2. Under **Environment Variables**, add:
+1. Sign in at <https://vercel.com> with **the same GitHub account** that owns the repository.
+2. Click **Add New > Project**, find `projectdesk` and click **Import**. If it isn't listed, click **Adjust GitHub App Permissions** and give Vercel access to the repository.
+3. Vercel detects **Vite**. Leave the build settings as they are.
+4. Open **Environment Variables** and add these:
 
    | Name | Value |
    | --- | --- |
-   | `VITE_FIREBASE_API_KEY` | from `firebaseConfig` |
-   | `VITE_FIREBASE_AUTH_DOMAIN` | `<project-id>.firebaseapp.com` |
-   | `VITE_FIREBASE_PROJECT_ID` | `<project-id>` |
-   | `VITE_FIREBASE_STORAGE_BUCKET` | from `firebaseConfig` |
-   | `VITE_FIREBASE_MESSAGING_SENDER_ID` | from `firebaseConfig` |
-   | `VITE_FIREBASE_APP_ID` | from `firebaseConfig` |
+   | `VITE_FIREBASE_API_KEY` | `apiKey` from firebaseConfig |
+   | `VITE_FIREBASE_AUTH_DOMAIN` | `authDomain` |
+   | `VITE_FIREBASE_PROJECT_ID` | `projectId` |
+   | `VITE_FIREBASE_STORAGE_BUCKET` | `storageBucket` |
+   | `VITE_FIREBASE_MESSAGING_SENDER_ID` | `messagingSenderId` |
+   | `VITE_FIREBASE_APP_ID` | `appId` |
    | `VITE_STORAGE_PROVIDER` | `cloudinary` |
-   | `VITE_DEMO_ACCOUNTS` | `true` if you seeded demo data |
-   | `FIREBASE_PROJECT_ID` | `<project-id>` |
+   | `VITE_DEMO_ACCOUNTS` | `true` (shows the demo login buttons) |
+   | `FIREBASE_PROJECT_ID` | same as `projectId` |
    | `CLOUDINARY_CLOUD_NAME` | from Cloudinary |
    | `CLOUDINARY_API_KEY` | from Cloudinary |
-   | `CLOUDINARY_API_SECRET` | from Cloudinary (server-only, never prefix with `VITE_`) |
+   | `CLOUDINARY_API_SECRET` | from Cloudinary |
 
-3. Click **Deploy**. Every push to `main` redeploys, and every pull request gets its own preview URL.
-4. Back in Firebase, open **Authentication → Settings → Authorized domains** and add your `*.vercel.app` domain.
+   Never start the Cloudinary secret's name with `VITE_`. Anything with that prefix is sent to the browser.
 
-## 5. (Optional) Deploy rules automatically from CI
+5. Click **Deploy**. After about a minute you get a link like `https://projectdesk-xxxx.vercel.app`.
+6. Back in Firebase, open **Authentication > Settings > Authorized domains**, click **Add domain** and add your Vercel domain (without `https://`).
 
-In GitHub, open **Settings → Secrets and variables → Actions** and add:
+From now on, every push to `main` redeploys the site, and every pull request gets its own preview link.
 
-- `FIREBASE_SERVICE_ACCOUNT`: the full JSON of a service-account key with the *Firebase Rules Admin* and *Cloud Datastore Index Admin* roles
+## Step 5. Create the coordinator and the demo data
+
+Nobody can sign up as a coordinator from the app. This is on purpose, and the security rules enforce it. Pick one option:
+
+**Option A: quick, no demo data**
+
+1. Open your site and register as **Faculty**.
+2. In Firebase, open **Firestore Database > Data > users** and click your document.
+3. Change `role` to `coordinator` and `status` to `active`.
+
+**Option B: demo accounts and sample teams (best for a portfolio)**
+
+1. In Firebase **Project settings > Service accounts**, click **Generate new private key**. Save the file **outside** the project folder, for example `C:\keys\projectdesk-sa.json`.
+2. In the project folder, run:
+
+   ```powershell
+   # Windows PowerShell
+   $env:GOOGLE_APPLICATION_CREDENTIALS="C:\keys\projectdesk-sa.json"
+   $env:FIREBASE_PROJECT_ID="<your-project-id>"
+   npm run seed -- --production
+   ```
+
+   ```bash
+   # macOS / Linux
+   GOOGLE_APPLICATION_CREDENTIALS=~/keys/projectdesk-sa.json FIREBASE_PROJECT_ID=<your-project-id> npm run seed -- --production
+   ```
+
+This creates the coordinator, guide and student demo accounts (password `Demo@1234`) and five sample teams. Running it again is safe.
+
+## Step 6 (optional). Deploy the rules from CI
+
+The CI pipeline can publish `firestore.rules` for you after all tests pass. In GitHub, open **Settings > Secrets and variables > Actions** and add:
+
+- `FIREBASE_SERVICE_ACCOUNT`: the whole JSON of a service-account key
 - `FIREBASE_PROJECT_ID`: your project ID
 
-The `deploy-rules` job then publishes `firestore.rules` and indexes after all tests pass on `main`.
+Without these secrets, the deploy step is skipped and everything else still runs.
 
-## Troubleshooting
+## If something goes wrong
 
-| Symptom | Fix |
+| What you see | How to fix it |
 | --- | --- |
-| "Missing or insufficient permissions" everywhere | The rules weren't published (step 2), or the user's `status` isn't `active`. |
-| Coordinator overview shows an index error | Add the `submissions.cycleId` collection-group exemption (step 2). |
-| Uploads fail with "not configured on the server" | Check the Cloudinary and `FIREBASE_PROJECT_ID` environment variables in Vercel, then redeploy. |
-| PDF preview shows a 401 | Turn on PDF delivery in Cloudinary (step 3). |
-| Sign-in fails only on the live site | Add the Vercel domain to Firebase authorized domains. |
+| "Missing or insufficient permissions" on every page | The rules were not published (Step 2), or the account's `status` is not `active`. |
+| The coordinator overview shows an index error | Add the `submissions` / `cycleId` exemption from Step 2. |
+| Upload fails with "not configured on the server" | Check the Cloudinary variables and `FIREBASE_PROJECT_ID` in Vercel, then redeploy. |
+| A PDF opens as a blank page or a 401 error | Turn on PDF delivery in Cloudinary (Step 3). |
+| `git push` says permission denied to another account | Use the `git remote set-url` command from Step 1. |

@@ -1,120 +1,223 @@
+<div align="center">
+
+<img src="docs/images/banner.png" alt="ProjectDesk: final-year project registration and review platform" width="100%" />
+
 # ProjectDesk
 
-**Final-year project registration and review platform for colleges.**
-Students form teams and submit their review files, guides comment and award marks, and the project coordinator tracks every team from topic approval to final demo in one place. It replaces the usual email and WhatsApp collection process.
+**A web app that runs the final-year project process for a college department.**
+Students form teams and upload their review files, guides give feedback and marks, and the coordinator sees every team's progress in one place.
 
-![Student project overview](docs/screenshots/student-overview.png)
+[![CI](https://github.com/Vishi-vishnu/projectdesk/actions/workflows/ci.yml/badge.svg)](https://github.com/Vishi-vishnu/projectdesk/actions/workflows/ci.yml)
+![React](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
+![Firebase](https://img.shields.io/badge/Firebase-Auth%20%2B%20Firestore-FFA000?logo=firebase&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
+![Playwright](https://img.shields.io/badge/Tested%20with-Playwright-2EAD33?logo=playwright&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
-**Live demo:** _add your Vercel URL here_. The sign-in page has one-click demo accounts for all three roles (password `Demo@1234`).
+[**Live demo**](#live-demo) &nbsp;·&nbsp; [How to use it](#how-to-use-it) &nbsp;·&nbsp; [Run it locally](#run-it-locally) &nbsp;·&nbsp; [Architecture](#architecture)
+
+</div>
 
 ---
 
 ## The problem
 
-In most colleges, final-year projects go through a topic approval and four reviews over one semester. Students email their PPTs and reports to their guide, and feedback is spread across emails, WhatsApp and printed copies. The coordinator has to collect marks from each guide by hand. Files get lost, submissions get duplicated, and nobody can see at a glance which teams are behind.
+In the final year of engineering, every student team builds a project and presents it in four reviews across one semester. For each review, the team prepares a PPT and a report, and the guide gives feedback and marks.
+
+In most colleges this still runs on email and WhatsApp:
+
+- Students send files to the guide one by one, and old and new versions get mixed up.
+- Feedback is spread across chats, emails and printed copies, so half the team never sees it.
+- The coordinator collects marks from every guide by hand to find out which teams are behind.
+
+I went through this process myself, so I built **ProjectDesk** to put the whole semester in one place.
 
 ## What it does
 
-| Role | What they can do |
+| Who | What they can do |
 | --- | --- |
-| **Student** | Register, then create a team (and become the team lead) or join one with a 6-character code. Draft the project proposal and submit it for approval. Upload PDFs, PPTs, DOCs and images for each review. Every resubmission is kept as a new version. Read the guide's remarks and marks, ask doubts, and discuss in a team thread. |
-| **Faculty guide** | Sign up; the account stays pending until the coordinator approves it. See your assigned teams, approve or return project topics, work through a review queue (oldest first, late submissions flagged), preview files in the browser, comment, and accept or request changes with marks. |
-| **Project coordinator** | Create a project cycle with its review stages, due dates and marks. Approve faculty accounts, assign a guide to each team, see a progress matrix of every team at every stage, and export marks to CSV. |
+| **Student** | Create a team and become the team lead, or join a team with a 6-character code. Submit the project topic for approval. Upload PPTs, PDF reports and images for each review. See the guide's comments and marks, and ask doubts in a team discussion. |
+| **Faculty guide** | Sign up and wait for the coordinator to approve the account. Approve or return project topics. Work through a review queue where late submissions are flagged. Preview files in the browser, comment, and accept a review with marks or ask for changes. |
+| **Coordinator** | Set up the project cycle: team size, review stages, due dates and marks. Approve faculty accounts, assign a guide to each team, track every team on a progress matrix, and export marks to CSV. |
 
-Updates are real-time. When a guide posts feedback, it appears on the team's screen without a page refresh.
+Everything updates live. When a guide posts feedback, it shows up on the team's screen without a page refresh.
+
+<div align="center">
+  <img src="docs/images/demo.gif" alt="ProjectDesk walkthrough: sign in, create a team, upload review files, guide evaluation and coordinator overview" width="90%" />
+</div>
 
 ## Screenshots
 
-| Faculty dashboard | Evaluating a submission |
+| Student: project overview | Guide: evaluating a review |
 | --- | --- |
-| ![](docs/screenshots/faculty-dashboard.png) | ![](docs/screenshots/review-evaluation.png) |
-| **Coordinator progress matrix** | **Guide assignment** |
-| ![](docs/screenshots/coordinator-matrix.png) | ![](docs/screenshots/coordinator-teams.png) |
+| ![Student project overview](docs/screenshots/student-overview.png) | ![Guide evaluating a submission](docs/screenshots/review-evaluation.png) |
+| **Guide: dashboard** | **Coordinator: progress matrix** |
+| ![Faculty dashboard](docs/screenshots/faculty-dashboard.png) | ![Coordinator progress matrix](docs/screenshots/coordinator-matrix.png) |
+| **Coordinator: assigning guides** | **Team discussion and doubts** |
+| ![Coordinator teams page](docs/screenshots/coordinator-teams.png) | ![Team discussion](docs/screenshots/team-discussion.png) |
+
+<details>
+<summary>More screens: sign in, proposal, review schedule, mobile</summary>
+
+| Sign in | Project proposal |
+| --- | --- |
+| ![Sign in](docs/screenshots/sign-in.png) | ![Proposal](docs/screenshots/proposal.png) |
+| **Review schedule** | **Mobile** |
+| ![Review schedule](docs/screenshots/review-schedule.png) | <img src="docs/screenshots/mobile-overview.png" alt="Mobile view" width="300" /> |
+
+</details>
+
+## Live demo
+
+**Link:** _coming soon_
+
+The sign-in page has one-click demo logins. All demo accounts use the password `Demo@1234`.
+
+| Role | Email |
+| --- | --- |
+| Coordinator | `coordinator@demo.projectdesk.app` |
+| Faculty guide | `meena@demo.projectdesk.app` |
+| Student (team lead) | `arjun@demo.projectdesk.app` |
+| Student without a team | `gokul@demo.projectdesk.app` |
+
+## How to use it
+
+A typical semester looks like this:
+
+1. **The coordinator opens a project cycle.** On *Review schedule*, they set the team size and the four review stages with due dates and marks.
+2. **Students register and form teams.** One student creates the team and shares the join code. Teammates enter the code to join.
+3. **Faculty register and get approved.** The coordinator approves them on *People*, then assigns a guide to each team on *Teams*.
+4. **The team submits its topic.** The team lead fills in the title, abstract and tools on *Proposal* and submits it. The guide approves it or sends it back with remarks.
+5. **The team uploads each review.** On *Reviews*, any member uploads files (PDF, PPT/PPTX, DOC/DOCX, PNG, JPG, WEBP, up to 10 MB each). A resubmission becomes a new version, and old versions are kept.
+6. **The guide reviews it.** The guide previews the files, comments, and either accepts the review with marks or requests changes. Students can mark a comment as a doubt, and the guide resolves it.
+7. **The coordinator tracks everyone.** The *Overview* shows a matrix of every team at every stage, and *Export CSV* downloads all the marks.
 
 ## Tech stack
 
-- **Frontend:** React 19, TypeScript, Vite, Tailwind CSS v4, React Router, React Hook Form + Zod, Radix UI primitives
-- **Backend:** Firebase Authentication and Cloud Firestore (real-time listeners), with Firestore security rules as the authorization layer
-- **File storage:** Cloudinary (free tier) through a signed-upload serverless function on Vercel. The Firebase Storage adapter is used with the local emulator.
-- **Testing:** Vitest and Testing Library (unit and component), `@firebase/rules-unit-testing` (security rules), Playwright (end-to-end, desktop and mobile)
-- **DevOps:** GitHub Actions CI (lint, type-check, unit, rules and E2E tests, build, rules deploy), Vercel hosting with preview deployments, and a multi-stage Docker image served by nginx
+| Layer | Tools |
+| --- | --- |
+| Frontend | React 19, TypeScript, Vite, Tailwind CSS 4, React Router, React Hook Form + Zod, Radix UI |
+| Backend | Firebase Authentication, Cloud Firestore (real-time listeners), Firestore security rules |
+| File storage | Cloudinary (free plan) with signed uploads from a Vercel serverless function |
+| Testing | Vitest, Testing Library, Firebase rules unit testing, Playwright (desktop and mobile) |
+| DevOps | GitHub Actions CI, Vercel hosting with preview deployments, Docker (multi-stage build + nginx) |
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-  subgraph Browser["React SPA (Vercel CDN)"]
-    UI[Pages & components] --> Hooks[Live data hooks<br/>onSnapshot]
-    UI --> Services[Service layer<br/>batched writes]
-    UI --> Storage[Storage adapter]
+  subgraph Browser["React app (hosted on Vercel)"]
+    UI[Pages and components] --> Hooks[Live data hooks]
+    UI --> Services[Service layer: batched writes]
+    UI --> Adapter[Storage adapter]
   end
-  Hooks <--> FS[(Cloud Firestore)]
-  Services --> FS
-  FS -. enforced by .- Rules[firestore.rules]
+  Hooks <--> DB[(Cloud Firestore)]
+  Services --> DB
+  Rules[Security rules] -. protect .- DB
   UI --> Auth[Firebase Auth]
-  Storage -- 1. ask for signature + ID token --> API[/Vercel function<br/>api/upload-signature/]
-  API -- verify token & team membership --> FS
-  Storage -- 2. signed upload --> CDN[(Cloudinary)]
+  Adapter -- "1. ask for a signature" --> API["Vercel function<br/>/api/upload-signature"]
+  API -- "check token and team" --> DB
+  Adapter -- "2. upload the file" --> CDN[(Cloudinary)]
 ```
 
-Key decisions (details in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)):
+A few decisions that shaped the project:
 
-- **Security lives in the rules, not the UI.** Every write is validated server-side: who can grade, who can join a team, and the fact that nobody can register as a coordinator. For example, joining a team requires the secret join code, and the proof is tied to the joining user's ID so it can't be replayed.
-- **Atomic batched writes.** Creating a team writes the team, its join code, the student's profile link and an activity-log entry in one batch. The rules cross-check them with `getAfter()`, so the data can't end up half-written.
-- **Pluggable storage.** A `StorageProvider` interface has Firebase Storage and Cloudinary implementations, chosen at build time. The free Firebase plan no longer includes Storage, so production uses Cloudinary. The API secret stays on the server.
-- **Submissions are immutable and versioned.** Resubmitting creates v2, v3 and so on, and the full history and every remark are kept.
+- **Security is enforced on the server.** The browser talks to Firestore directly, so every rule lives in [`firestore.rules`](firestore.rules). Students cannot grade themselves, change their role, read other teams, or post as someone else. Nobody can sign up as a coordinator.
+- **Related writes happen together.** Creating a team writes the team, its join code, the student's profile and an activity entry in one batch. Either all of them save or none do.
+- **Join codes cannot be reused by others.** The proof of the code is tied to the person joining, and the rules check it.
+- **The upload secret never reaches the browser.** A small serverless function checks the user's login token and team membership, then returns a short-lived signature for that team's folder only.
+- **Storage can be swapped.** File uploads go through one `StorageProvider` interface, with a Cloudinary version for production and a Firebase Storage version for local development.
+
+More detail is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+## Testing and CI
+
+Every push runs the pipeline in [`.github/workflows/ci.yml`](.github/workflows/ci.yml): lint, type check, unit tests, security-rules tests on the Firestore emulator, Playwright end-to-end tests and a production build.
+
+| Layer | What is covered |
+| --- | --- |
+| Unit | Deadline and progress logic, file checks, CSV export, upload signatures |
+| Security rules | 33 tests with 64 allow and deny checks across every collection |
+| End-to-end | A full semester across all three roles, resubmissions, file previews, upload limits, approvals and the mobile layout |
+
+The longest end-to-end test plays out a whole semester. A student registers and creates a team, and a classmate joins with the code. The coordinator assigns a guide, who approves the topic. The student uploads Review 1 and asks a doubt, and the guide replies, resolves it and gives marks.
 
 ## Run it locally
 
-Requires Node 20+.
+You need Node.js 22.12 or later.
 
 ```bash
+git clone https://github.com/Vishi-vishnu/projectdesk.git
+cd projectdesk
 npm install
 
-# Option A: no setup at all. Uses an in-browser fake backend with demo data.
-npm run dev:fake            # http://localhost:5173
-
-# Option B: the real Firebase stack on local emulators (needs Java 21)
-npm run emulators           # terminal 1: Auth, Firestore, Storage + UI at :4000
-npm run seed                # terminal 2: demo accounts and data
-npm run dev:emulator        # terminal 2: http://localhost:5173
+# Quickest: runs in the browser with demo data, no accounts needed
+npm run dev:fake
 ```
 
-Demo logins (password `Demo@1234`): `coordinator@demo.projectdesk.app`, `meena@demo.projectdesk.app` (guide), `arjun@demo.projectdesk.app` (student team lead).
+Then open http://localhost:5173 and use one of the demo logins above.
 
-## Tests
+<details>
+<summary>Run with the real Firebase stack on local emulators</summary>
+
+This needs Java 21 for the Firebase emulators.
 
 ```bash
-npm run check        # lint + type-check + unit tests
-npm run test:rules   # Firestore security rules against the emulator
-npm run test:e2e     # Playwright: full journeys for all three roles + mobile layout
+npm run emulators       # terminal 1: Auth, Firestore and Storage emulators
+npm run seed            # terminal 2: demo accounts and data
+npm run dev:emulator    # terminal 2: app at http://localhost:5173
 ```
 
-The end-to-end suite runs a complete semester in a single test: a student registers, creates a team and submits a proposal; a classmate joins with the code; the coordinator assigns a guide; the guide approves the topic; the student uploads Review 1 and raises a doubt; the guide replies, resolves the doubt and awards marks; and the team sees the result.
+</details>
 
-## Deploy (free tier)
+<details>
+<summary>Useful scripts</summary>
 
-See **[docs/SETUP.md](docs/SETUP.md)** for the step-by-step guide covering the Firebase project on the Spark plan, a Cloudinary account, Vercel and GitHub secrets.
+| Command | What it does |
+| --- | --- |
+| `npm run check` | Lint, type check and unit tests |
+| `npm run test:e2e` | Playwright end-to-end tests |
+| `npm run test:rules` | Security-rules tests on the Firestore emulator |
+| `npm run build` | Production build |
+
+</details>
+
+To deploy your own copy for free (Firebase Spark, Cloudinary free plan and Vercel Hobby), follow [docs/SETUP.md](docs/SETUP.md).
 
 ## Project structure
 
 ```
-api/                    Vercel serverless function (Cloudinary upload signing)
-e2e/                    Playwright end-to-end tests
-scripts/seed.ts         Demo data seeder (emulator or production)
+api/                   Vercel serverless function for signed uploads
+e2e/                   Playwright end-to-end tests
+scripts/seed.ts        Demo data for the emulator or a real project
 src/
-  components/ui/        Design-system primitives (Button, Field, Dialog, Badge…)
-  components/domain/    FileUploader, CommentThread, ReviewStepper, ActivityFeed…
-  context/              Auth state (Firebase user + live profile document)
-  hooks/                Real-time Firestore hooks
-  lib/                  Types, progress logic, file validation, storage adapters
-  pages/                Route screens per role (student, faculty, coordinator, team)
-  services/             All Firestore writes, grouped by domain
-  testing/              Seed data and the in-browser fake backend for UI tests
-tests/rules/            Security-rules unit tests
-firestore.rules         Authorization — the real source of truth
+  components/ui/       Buttons, fields, dialogs, badges and other building blocks
+  components/domain/   File uploader, comment thread, review tracker, activity feed
+  pages/               Screens for students, guides and the coordinator
+  services/            Every database write, grouped by feature
+  hooks/               Real-time data hooks
+  lib/                 Types, progress logic, file checks, storage adapters
+tests/rules/           Security-rules tests
+firestore.rules        Who can read and write what
 ```
+
+## What I would add next
+
+- Email alerts when a guide posts feedback or a deadline is close
+- A cleanup job for files whose submission failed to save
+- Rate limiting and Firebase App Check on the upload endpoint
+- Support for several departments, each with its own coordinator
+
+## Author
+
+**Vishnu Kumar G K**
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-vishnu081-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/vishnu081/)
+[![GitHub](https://img.shields.io/badge/GitHub-Vishi--vishnu-181717?logo=github&logoColor=white)](https://github.com/Vishi-vishnu)
+
+If you have feedback or ideas, feel free to open an issue or reach out on LinkedIn.
 
 ## License
 
-MIT
+[MIT](LICENSE)
