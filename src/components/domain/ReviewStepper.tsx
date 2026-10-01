@@ -74,7 +74,7 @@ export function ReviewStepper({
           <span
             className={cn(
               'relative z-10 flex size-6 items-center justify-center rounded-full border text-[11px] font-semibold',
-              step.state === 'done' && 'border-ok bg-ok text-white',
+              step.state === 'done' && 'border-ok-solid bg-ok-solid text-white',
               step.state === 'current' && 'border-brand bg-brand-soft text-brand',
               step.state === 'attention' && 'border-warn bg-warn-soft text-warn',
               step.state === 'todo' && 'border-line-strong bg-surface text-ink-3',

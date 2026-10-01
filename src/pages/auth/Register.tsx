@@ -8,6 +8,7 @@ import { Button, cn, ErrorNote, Field, Input, Select } from '@/components/ui'
 import { DEPARTMENTS } from '@/lib/constants'
 import { registerAccount } from '@/services/users'
 import { AuthLayout } from './AuthLayout'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { errorMessage } from './errors'
 
 const schema = z
@@ -28,6 +29,7 @@ const schema = z
 type Values = z.infer<typeof schema>
 
 export function Register() {
+  useDocumentTitle('Create account')
   const [error, setError] = useState<string | null>(null)
   const {
     register,

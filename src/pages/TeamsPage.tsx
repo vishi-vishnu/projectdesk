@@ -3,12 +3,12 @@
  * guide and export marks to CSV. Faculty see only the teams they guide.
  */
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Download, FolderKanban, Search } from 'lucide-react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { Download, FolderKanban, Search, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { ProposalBadge } from '@/components/domain/StatusBadge'
-import { Button, Card, EmptyState, Input, ProgressBar, Select, Skeleton } from '@/components/ui'
+import { Badge, Button, Card, Dialog, EmptyState, Input, ProgressBar, Select, Skeleton } from '@/components/ui'
 import { useProfile } from '@/context/auth-context'
 import {
   useActiveCycle,
@@ -18,6 +18,7 @@ import {
   useTeamsForGuide,
   useUsersByRole,
 } from '@/hooks/data'
+import { planGuideAssignments } from '@/lib/assign'
 import { downloadCsv } from '@/lib/csv'
 import { teamProgress } from '@/lib/progress'
 import type { Cycle, ProposalStatus, Submission, Team, UserProfile } from '@/lib/types'
@@ -60,6 +61,89 @@ function GuideSelect({ team, faculty }: { team: Team; faculty: UserProfile[] }) 
         </option>
       ))}
     </Select>
+  )
+}
+
+function AutoAssignDialog({
+  open,
+  onOpenChange,
+  teams,
+  faculty,
+}: {
+  open: boolean
+  onOpenChange: (o: boolean) => void
+  teams: Team[]
+  faculty: UserProfile[]
+}) {
+  const profile = useProfile()
+  const [saving, setSaving] = useState(false)
+  const plan = useMemo(() => planGuideAssignments(teams, faculty), [teams, faculty])
+  const teamById = Object.fromEntries(teams.map((t) => [t.id, t]))
+  const guideById = Object.fromEntries(faculty.map((f) => [f.uid, f]))
+
+  const apply = async () => {
+    setSaving(true)
+    let done = 0
+    try {
+      for (const p of plan) {
+        const g = guideById[p.guideId]
+        await assignGuide(teamById[p.teamId], { uid: g.uid, name: g.name }, { uid: profile.uid, name: profile.name })
+        done++
+      }
+      toast.success(`Assigned guides to ${done} ${done === 1 ? 'team' : 'teams'}`)
+      onOpenChange(false)
+    } catch (e) {
+      toast.error(`${errorMessage(e)} ${done} of ${plan.length} were assigned.`)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Assign guides automatically"
+      description="Each team gets its preferred guide when that guide has room. The rest are spread evenly. Nothing changes until you confirm."
+      size="lg"
+      footer={
+        <>
+          <Button onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="primary" loading={saving} disabled={!plan.length} onClick={apply}>
+            Assign {plan.length} {plan.length === 1 ? 'team' : 'teams'}
+          </Button>
+        </>
+      }
+    >
+      {faculty.length === 0 ? (
+        <p className="text-[13px] text-ink-3">There are no active faculty guides yet. Approve faculty accounts on the People page first.</p>
+      ) : plan.length === 0 ? (
+        <p className="text-[13px] text-ink-3">Every team already has a guide.</p>
+      ) : (
+        <table className="w-full text-left text-[13px]">
+          <thead className="text-[12px] text-ink-3">
+            <tr>
+              <th className="py-1.5 font-medium">Team</th>
+              <th className="py-1.5 font-medium">Guide</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-line">
+            {plan.map((p) => (
+              <tr key={p.teamId}>
+                <td className="py-2 pr-3">
+                  <span className="font-medium">{teamById[p.teamId].name}</span>
+                  <span className="block truncate text-[12px] text-ink-3">{teamById[p.teamId].project.title || 'Untitled project'}</span>
+                </td>
+                <td className="py-2">
+                  <span className="mr-2">{guideById[p.guideId].name}</span>
+                  {p.reason === 'preferred' && <Badge tone="ok">Preferred</Badge>}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </Dialog>
   )
 }
 
@@ -115,7 +199,14 @@ function TeamsTable({
                 </td>
                 <td className="px-3 py-3">
                   {manage ? (
-                    <GuideSelect team={t} faculty={faculty} />
+                    <>
+                      <GuideSelect team={t} faculty={faculty} />
+                      {!t.guideId && t.project.preferredGuideId && facultyById[t.project.preferredGuideId] && (
+                        <p className="mt-1 truncate text-[12px] text-ink-3">
+                          Prefers {facultyById[t.project.preferredGuideId].name}
+                        </p>
+                      )}
+                    </>
                   ) : (
                     <span className="text-ink-2">{t.guideId ? (facultyById[t.guideId]?.name ?? '-') : 'Unassigned'}</span>
                   )}
@@ -160,8 +251,13 @@ export function TeamsPage() {
   const activeFaculty = faculty.filter((f) => f.status === 'active')
   const students = useMemo(() => Object.fromEntries(studentList.map((s) => [s.uid, s])), [studentList])
 
+  const [params] = useSearchParams()
   const [search, setSearch] = useState('')
-  const [status, setStatus] = useState<'' | ProposalStatus | 'unassigned'>('')
+  const [status, setStatus] = useState<'' | ProposalStatus | 'unassigned'>(() =>
+    params.get('filter') === 'unassigned' ? 'unassigned' : '',
+  )
+  const [autoOpen, setAutoOpen] = useState(false)
+  const unassignedCount = teams.filter((t) => !t.guideId).length
 
   const filtered = teams.filter((t) => {
     const q = search.trim().toLowerCase()
@@ -210,9 +306,14 @@ export function TeamsPage() {
         }
         actions={
           isCoordinator && (
-            <Button icon={<Download className="size-4" />} onClick={exportCsv} disabled={!teams.length}>
-              Export CSV
-            </Button>
+            <>
+              <Button icon={<Sparkles className="size-4" />} onClick={() => setAutoOpen(true)} disabled={!unassignedCount}>
+                Auto-assign guides
+              </Button>
+              <Button icon={<Download className="size-4" />} onClick={exportCsv} disabled={!teams.length}>
+                Export CSV
+              </Button>
+            </>
           )
         }
       />
@@ -232,7 +333,7 @@ export function TeamsPage() {
           <div className="sm:w-56">
             <Select value={status} onChange={(e) => setStatus(e.target.value as typeof status)} aria-label="Filter teams">
               <option value="">All teams ({teams.length})</option>
-              <option value="unassigned">Without a guide ({teams.filter((t) => !t.guideId).length})</option>
+              <option value="unassigned">Without a guide ({unassignedCount})</option>
               <option value="submitted">Topic pending approval</option>
               <option value="approved">Topic approved</option>
               <option value="changes_requested">Topic changes requested</option>
@@ -274,6 +375,9 @@ export function TeamsPage() {
           />
         )}
       </Card>
+      {isCoordinator && autoOpen && (
+        <AutoAssignDialog open={autoOpen} onOpenChange={setAutoOpen} teams={teams} faculty={activeFaculty} />
+      )}
     </>
   )
 }

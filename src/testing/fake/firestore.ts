@@ -71,7 +71,10 @@ class CollectionReference {
   }
 }
 
-type Constraint = { type: 'where'; field: string; op: string; value: unknown } | { type: 'orderBy'; field: string; dir: 'asc' | 'desc' }
+type Constraint =
+  | { type: 'where'; field: string; op: string; value: unknown }
+  | { type: 'orderBy'; field: string; dir: 'asc' | 'desc' }
+  | { type: 'limit'; count: number }
 
 class Query {
   type = 'query' as const
@@ -110,6 +113,7 @@ export function collectionGroup(_db: unknown, groupId: string) {
 
 export const where = (field: string, op: string, value: unknown): Constraint => ({ type: 'where', field, op, value })
 export const orderBy = (field: string, dir: 'asc' | 'desc' = 'asc'): Constraint => ({ type: 'orderBy', field, dir })
+export const limit = (count: number): Constraint => ({ type: 'limit', count })
 
 export function query(base: CollectionReference | Query, ...constraints: Constraint[]) {
   if (base instanceof Query) return new Query(base.source, [...base.constraints, ...constraints], base.converter)
@@ -156,6 +160,8 @@ function runQuery(q: Query) {
       return (x < y ? -1 : x > y ? 1 : 0) * (c.dir === 'desc' ? -1 : 1)
     })
   }
+  const lim = q.constraints.find((c) => c.type === 'limit')
+  if (lim && lim.type === 'limit') return results.slice(0, lim.count)
   return results
 }
 

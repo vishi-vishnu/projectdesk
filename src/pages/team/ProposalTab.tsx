@@ -10,7 +10,8 @@ import { z } from 'zod'
 import { toast } from 'sonner'
 import { Check, RotateCcw, Send } from 'lucide-react'
 import { ProposalBadge } from '@/components/domain/StatusBadge'
-import { Badge, Button, Card, CardBody, CardHeader, Field, Input, Notice, Textarea } from '@/components/ui'
+import { Badge, Button, Card, CardBody, CardHeader, Field, Input, Notice, Select, Textarea } from '@/components/ui'
+import { useActiveFaculty } from '@/hooks/data'
 import { reviewProposal, saveProject, submitProposal } from '@/services/teams'
 import { errorMessage } from '@/pages/auth/errors'
 import { useTeamContext } from './TeamContext'
@@ -21,6 +22,7 @@ const schema = z.object({
   domain: z.string().trim().max(60),
   techStack: z.string().trim().max(300),
   abstract: z.string().trim().max(3000),
+  preferredGuideId: z.string(),
 })
 type Values = z.infer<typeof schema>
 
@@ -42,8 +44,11 @@ function ProposalForm() {
       domain: team.project.domain,
       techStack: team.project.techStack.join(', '),
       abstract: team.project.abstract,
+      preferredGuideId: team.project.preferredGuideId ?? '',
     },
   })
+  // Only worth asking while the coordinator hasn't picked a guide.
+  const { data: faculty, loading: facultyLoading } = useActiveFaculty(!team.guideId)
   const [submitting, setSubmitting] = useState(false)
   const abstractLength = watch('abstract')?.length ?? 0
 
@@ -56,6 +61,7 @@ function ProposalForm() {
       .map((s) => s.trim())
       .filter(Boolean)
       .slice(0, 12),
+    preferredGuideId: v.preferredGuideId || null,
   })
 
   const onSave = async (v: Values) => {
@@ -96,9 +102,32 @@ function ProposalForm() {
       <Field label="Project title" error={errors.title?.message}>
         {(p) => <Input placeholder="e.g. Smart irrigation using soil-moisture sensing and LoRa" {...p} {...register('title')} />}
       </Field>
-      <Field label="Tools & technologies" optional hint="Comma separated, for example ESP32, Python, Firebase">
-        {(p) => <Input {...p} {...register('techStack')} />}
-      </Field>
+      <div className={team.guideId ? '' : 'grid gap-4 sm:grid-cols-2'}>
+        <Field label="Tools & technologies" optional hint="Comma separated, for example ESP32, Python, Firebase">
+          {(p) => <Input {...p} {...register('techStack')} />}
+        </Field>
+        {!team.guideId && (
+          <Field label="Preferred guide" optional hint="A request only. The coordinator makes the final choice.">
+            {(p) =>
+              facultyLoading ? (
+                <Select {...p} disabled>
+                  <option>Loading guides…</option>
+                </Select>
+              ) : (
+                <Select {...p} {...register('preferredGuideId')}>
+                  <option value="">No preference</option>
+                  {faculty.map((f) => (
+                    <option key={f.uid} value={f.uid}>
+                      {f.name}
+                      {f.designation ? `, ${f.designation}` : ''}
+                    </option>
+                  ))}
+                </Select>
+              )
+            }
+          </Field>
+        )}
+      </div>
       <Field
         label="Abstract"
         hint={`${abstractLength} characters · at least ${MIN_ABSTRACT} required to submit`}
@@ -169,6 +198,9 @@ function GuideDecision() {
 export function ProposalTab() {
   const { team, perms } = useTeamContext()
   const p = team.project
+  const wantsGuide = !team.guideId && Boolean(p.preferredGuideId) && !perms.canEditProject
+  const { data: faculty } = useActiveFaculty(wantsGuide)
+  const preferred = wantsGuide ? faculty.find((f) => f.uid === p.preferredGuideId) : undefined
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -207,6 +239,12 @@ export function ProposalTab() {
                   <dt className="text-[12px] font-medium text-ink-3">Abstract</dt>
                   <dd className="mt-1 max-w-[70ch] leading-relaxed whitespace-pre-wrap text-ink-2">{p.abstract || 'Not added yet'}</dd>
                 </div>
+                {preferred && (
+                  <div>
+                    <dt className="text-[12px] font-medium text-ink-3">Preferred guide</dt>
+                    <dd className="mt-0.5">{preferred.name}</dd>
+                  </div>
+                )}
                 {team.proposalStatus !== 'changes_requested' && team.proposalRemarks && (
                   <div>
                     <dt className="text-[12px] font-medium text-ink-3">Guide's remarks</dt>

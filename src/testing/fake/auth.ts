@@ -76,3 +76,24 @@ export async function signOut() {
 export async function sendPasswordResetEmail() {
   await delay()
 }
+
+export const EmailAuthProvider = {
+  credential: (email: string, password: string) => ({ email, password }),
+}
+
+export async function reauthenticateWithCredential(user: FakeUser, cred: { email: string; password: string }) {
+  await delay()
+  const a = accounts.get(user.email)
+  if (!a || a.password !== cred.password) throw new FirebaseError('auth/invalid-credential', 'Invalid credential')
+  return { user }
+}
+
+export async function updatePassword(user: FakeUser, password: string) {
+  await delay()
+  if (password.length < 6) throw new FirebaseError('auth/weak-password', 'Weak password')
+  const a = accounts.get(user.email)
+  if (a) {
+    a.password = password
+    persist()
+  }
+}

@@ -50,12 +50,13 @@ export function ErrorNote({ title = 'Something went wrong', children }: { title?
   )
 }
 
-export function Notice({ tone = 'neutral', icon, children, className }: { tone?: 'neutral' | 'brand' | 'warn' | 'ok'; icon?: ReactNode; children: ReactNode; className?: string }) {
+export function Notice({ tone = 'neutral', icon, children, className }: { tone?: 'neutral' | 'brand' | 'warn' | 'ok' | 'bad'; icon?: ReactNode; children: ReactNode; className?: string }) {
   const tones = {
     neutral: 'border-line bg-subtle text-ink-2',
     brand: 'border-brand-line bg-brand-soft text-ink',
     warn: 'border-warn-line bg-warn-soft text-ink',
     ok: 'border-ok-line bg-ok-soft text-ink',
+    bad: 'border-bad-line bg-bad-soft text-ink',
   }
   return (
     <div className={cn('flex gap-3 rounded-md border px-4 py-3 text-[13px]', tones[tone], className)}>

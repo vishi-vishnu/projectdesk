@@ -1,5 +1,14 @@
 import { doc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore'
-import { createUserWithEmailAndPassword, sendPasswordResetEmail, signInWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth'
+import {
+  createUserWithEmailAndPassword,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
+  signOut,
+  updatePassword,
+  updateProfile,
+} from 'firebase/auth'
 import { auth, db } from '@/lib/firebase'
 import type { AccountStatus, Role } from '@/lib/types'
 
@@ -47,4 +56,12 @@ export function updateOwnProfile(uid: string, data: { name: string; department: 
 
 export function setAccountStatus(uid: string, status: AccountStatus) {
   return updateDoc(doc(db, 'users', uid), { status })
+}
+
+/** Firebase asks for the current password again before it lets a password change through. */
+export async function changePassword(currentPassword: string, newPassword: string) {
+  const user = auth.currentUser
+  if (!user?.email) throw new Error('You need to be signed in to change your password.')
+  await reauthenticateWithCredential(user, EmailAuthProvider.credential(user.email, currentPassword))
+  await updatePassword(user, newPassword)
 }

@@ -4,8 +4,9 @@
  */
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, CalendarPlus, LayoutGrid } from 'lucide-react'
+import { ArrowRight, CalendarPlus, CheckCircle2, ChevronRight, LayoutGrid } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { AnnouncementsCard } from '@/components/domain/AnnouncementsCard'
 import { StatCard } from '@/components/domain/StatCard'
 import { Button, Card, CardHeader, cn, EmptyState, Skeleton } from '@/components/ui'
 import { useActiveCycle, useCycleSubmissions, useTeamsForCycle, useUsersByRole } from '@/hooks/data'
@@ -14,7 +15,7 @@ import { latestByReview, stageState, stageStateLabel, type StageState, stageShor
 import type { Submission } from '@/lib/types'
 
 const cell: Record<StageState, string> = {
-  accepted: 'bg-ok text-white',
+  accepted: 'bg-ok-solid text-white',
   submitted: 'bg-brand-soft text-brand ring-1 ring-inset ring-brand-line',
   changes_requested: 'bg-warn-soft text-warn ring-1 ring-inset ring-warn-line',
   overdue: 'bg-bad-soft text-bad ring-1 ring-inset ring-bad-line',
@@ -85,6 +86,16 @@ export function CoordinatorDashboard() {
     }
     return { submitted, accepted }
   })
+
+  const overdueTeams = teams.filter((t) =>
+    cycle.reviews.some((r) => stageState(r, latestByReview(byTeam[t.id] ?? []).get(r.id), now) === 'overdue'),
+  ).length
+  const todo = [
+    { count: pendingFaculty, text: pendingFaculty === 1 ? 'faculty account to approve' : 'faculty accounts to approve', to: '/people' },
+    { count: unassigned, text: unassigned === 1 ? 'team needs a guide' : 'teams need a guide', to: '/teams?filter=unassigned' },
+    { count: withoutTeam, text: withoutTeam === 1 ? 'student is not in a team' : 'students are not in a team', to: '/people?tab=students' },
+    { count: overdueTeams, text: overdueTeams === 1 ? 'team has an overdue review' : 'teams have an overdue review', to: '/teams' },
+  ].filter((t) => t.count > 0)
 
   return (
     <>
@@ -220,6 +231,30 @@ export function CoordinatorDashboard() {
           ))}
         </div>
       </Card>
+
+      <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader title="To do" description="Things that need a coordinator." />
+          {todo.length === 0 ? (
+            <EmptyState icon={<CheckCircle2 />} title="Nothing waiting on you" description="Approvals, guide assignments and deadlines are all on track." />
+          ) : (
+            <ul className="divide-y divide-line">
+              {todo.map((t) => (
+                <li key={t.text}>
+                  <Link to={t.to} className="flex items-center gap-3 px-5 py-3 text-[13.5px] hover:bg-subtle/60">
+                    <span className="tabular flex h-6 min-w-6 items-center justify-center rounded-full bg-warn-soft px-1.5 text-[12px] font-semibold text-warn">
+                      {t.count}
+                    </span>
+                    <span className="flex-1 text-ink-2">{t.text}</span>
+                    <ChevronRight className="size-4 text-ink-3" aria-hidden />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+        <AnnouncementsCard />
+      </div>
     </>
   )
 }

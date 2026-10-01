@@ -3,11 +3,12 @@
  * query and subscribes to it, so screens update as soon as data changes.
  */
 import { useEffect, useMemo, useState } from 'react'
-import { collectionGroup, onSnapshot, orderBy, query, where, type Query } from 'firebase/firestore'
+import { collectionGroup, limit, onSnapshot, orderBy, query, where, type Query } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import type { Activity, Comment, Cycle, Submission, Team, UserProfile } from '@/lib/types'
+import type { Activity, Announcement, Comment, Cycle, Submission, Team, UserProfile } from '@/lib/types'
 import {
   activityCol,
+  announcementsCol,
   commentsCol,
   cycleDoc,
   cyclesCol,
@@ -149,4 +150,41 @@ export function useProfiles(ids: (string | null | undefined)[]) {
   }, [key])
 
   return profiles
+}
+
+/** Active faculty, readable by every signed-in user (students pick a preferred guide). */
+export function useActiveFaculty(enabled = true) {
+  const q = useMemo(
+    () => (enabled ? query(usersCol(), where('role', '==', 'faculty'), where('status', '==', 'active')) : null),
+    [enabled],
+  )
+  const result = useCollection<UserProfile>(q, enabled ? 'users:faculty:active' : null)
+  const sorted = useMemo(() => [...result.data].sort((a, b) => a.name.localeCompare(b.name)), [result.data])
+  return { ...result, data: sorted }
+}
+
+export function useAnnouncements() {
+  const q = useMemo(() => query(announcementsCol(), orderBy('createdAt', 'desc'), limit(20)), [])
+  return useCollection<Announcement>(q, 'announcements')
+}
+
+/** Recent activity for several teams (the notification bell). */
+export function useActivityForTeams(teamIds: string[], perTeam = 15) {
+  const key = [...teamIds].sort().join(',')
+  const [state, setState] = useState<{ key: string; byTeam: Record<string, Activity[]> }>({ key, byTeam: {} })
+  if (state.key !== key) setState({ key, byTeam: {} })
+
+  useEffect(() => {
+    const ids = key ? key.split(',') : []
+    const unsubs = ids.map((teamId) =>
+      onSnapshot(query(activityCol(teamId), orderBy('createdAt', 'desc'), limit(perTeam)), (snap) =>
+        setState((prev) =>
+          prev.key !== key ? prev : { ...prev, byTeam: { ...prev.byTeam, [teamId]: snap.docs.map((d) => d.data()) } },
+        ),
+      ),
+    )
+    return () => unsubs.forEach((u) => u())
+  }, [key, perTeam])
+
+  return state.byTeam
 }

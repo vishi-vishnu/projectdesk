@@ -1,6 +1,6 @@
 import { collection, doc, type CollectionReference, type DocumentData, type QueryDocumentSnapshot, type SnapshotOptions } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import type { Activity, Comment, Cycle, Submission, Team, UserProfile } from '@/lib/types'
+import type { Activity, Announcement, Comment, Cycle, Submission, Team, UserProfile } from '@/lib/types'
 
 /** Adds the document id to the data so components never juggle snapshots. */
 function converter<T extends { id?: string }>() {
@@ -49,3 +49,5 @@ export const commentsCol = (scope: CommentScope): CollectionReference<Comment> =
 
 export const activityCol = (teamId: string) =>
   collection(db, 'teams', teamId, 'activity').withConverter(converter<Activity>())
+
+export const announcementsCol = () => collection(db, 'announcements').withConverter(converter<Announcement>())

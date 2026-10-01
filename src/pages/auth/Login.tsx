@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { Button, ErrorNote, Field, Input } from '@/components/ui'
 import { resetPassword, signIn } from '@/services/users'
 import { AuthLayout } from './AuthLayout'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { errorMessage } from './errors'
 
 const schema = z.object({
@@ -23,6 +24,7 @@ const demoAccounts = [
 ]
 
 export function Login() {
+  useDocumentTitle('Sign in')
   const [error, setError] = useState<string | null>(null)
   const {
     register,

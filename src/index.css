@@ -25,6 +25,7 @@
 
   /* Status */
   --color-ok: #17663d;
+  --color-ok-solid: #17663d;
   --color-ok-soft: #e7f3ec;
   --color-ok-line: #bfdcca;
   --color-warn: #8a4f00;
@@ -43,6 +44,39 @@
 
   --animate-fade-in: fade-in 150ms ease-out;
   --animate-pop-in: pop-in 160ms ease-out;
+}
+
+/* Dark theme: same token names, darker surfaces and lighter text. */
+:root[data-theme='dark'] {
+  --color-canvas: #101214;
+  --color-surface: #171a1d;
+  --color-subtle: #1d2024;
+  --color-muted: #272b30;
+  --color-line: #2a2e33;
+  --color-line-strong: #3a3f46;
+
+  --color-ink: #e9ebee;
+  --color-ink-2: #c4c8ce;
+  --color-ink-3: #959ba3;
+
+  --color-brand: #3f74cc;
+  --color-brand-hover: #5585d6;
+  --color-brand-soft: #18263d;
+  --color-brand-line: #2c4772;
+
+  --color-ok: #5cc795;
+  --color-ok-solid: #1f7a4d;
+  --color-ok-soft: #142820;
+  --color-ok-line: #24503a;
+  --color-warn: #e5a855;
+  --color-warn-soft: #2c2313;
+  --color-warn-line: #5a4321;
+  --color-bad: #f07a72;
+  --color-bad-soft: #301917;
+  --color-bad-line: #5f2b27;
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-pop: 0 10px 30px -8px rgb(0 0 0 / 0.6), 0 2px 6px rgb(0 0 0 / 0.4);
 }
 
 @keyframes fade-in {

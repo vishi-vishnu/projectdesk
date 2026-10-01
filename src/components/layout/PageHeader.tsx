@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronRight } from 'lucide-react'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 
 export function PageHeader({
   title,
@@ -15,6 +16,7 @@ export function PageHeader({
   breadcrumb?: { label: string; to?: string }[]
   meta?: ReactNode
 }) {
+  useDocumentTitle(typeof title === 'string' ? title : breadcrumb?.at(-1)?.label)
   return (
     <div className="mb-6">
       {breadcrumb && breadcrumb.length > 0 && (

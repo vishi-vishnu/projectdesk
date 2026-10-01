@@ -8,7 +8,7 @@ import { Avatar, Button, Card, CardBody, CardHeader, Field, Input, Select } from
 import { useProfile } from '@/context/auth-context'
 import { DEPARTMENTS } from '@/lib/constants'
 import { formatDate } from '@/lib/format'
-import { updateOwnProfile } from '@/services/users'
+import { changePassword, updateOwnProfile } from '@/services/users'
 import { errorMessage } from '@/pages/auth/errors'
 
 const schema = z.object({
@@ -18,6 +18,70 @@ const schema = z.object({
   designation: z.string().trim().max(60).optional(),
 })
 type Values = z.infer<typeof schema>
+
+const passwordSchema = z
+  .object({
+    current: z.string().min(1, 'Enter your current password.'),
+    next: z.string().min(8, 'Use at least 8 characters.').max(128),
+    confirm: z.string(),
+  })
+  .refine((v) => v.next === v.confirm, { path: ['confirm'], message: "The passwords don't match." })
+  .refine((v) => v.next !== v.current, { path: ['next'], message: 'Choose a password you have not used here.' })
+type PasswordValues = z.infer<typeof passwordSchema>
+
+function PasswordCard() {
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<PasswordValues>({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: { current: '', next: '', confirm: '' },
+  })
+
+  const onSubmit = async (v: PasswordValues) => {
+    try {
+      await changePassword(v.current, v.next)
+      reset()
+      toast.success('Password changed')
+    } catch (e) {
+      const message = errorMessage(e)
+      if (message === 'The email or password is incorrect.') {
+        setError('current', { message: 'Your current password is not correct.' })
+      } else {
+        toast.error(message)
+      }
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader title="Password" description="You need your current password to set a new one." />
+      <CardBody>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate aria-label="Change password">
+          <Field label="Current password" error={errors.current?.message}>
+            {(p) => <Input {...p} type="password" autoComplete="current-password" {...register('current')} />}
+          </Field>
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2">
+            <Field label="New password" error={errors.next?.message}>
+              {(p) => <Input {...p} type="password" autoComplete="new-password" {...register('next')} />}
+            </Field>
+            <Field label="Confirm new password" error={errors.confirm?.message}>
+              {(p) => <Input {...p} type="password" autoComplete="new-password" {...register('confirm')} />}
+            </Field>
+          </div>
+          <div className="flex justify-end border-t border-line pt-4">
+            <Button type="submit" loading={isSubmitting}>
+              Change password
+            </Button>
+          </div>
+        </form>
+      </CardBody>
+    </Card>
+  )
+}
 
 export function ProfilePage() {
   const profile = useProfile()
@@ -67,37 +131,40 @@ export function ProfilePage() {
             <p className="mt-1 text-[12px] text-ink-3">Member since {formatDate(profile.createdAt, 'MMM yyyy')}</p>
           </CardBody>
         </Card>
-        <Card>
-          <CardHeader title="Details" description="Your email can't be changed here." />
-          <CardBody>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-              <Field label="Full name" error={errors.name?.message}>
-                {(p) => <Input {...p} {...register('name')} />}
-              </Field>
-              <Field label="Department">
-                {(p) => (
-                  <Select {...p} {...register('department')}>
-                    {departments.map((d) => (
-                      <option key={d}>{d}</option>
-                    ))}
-                  </Select>
-                )}
-              </Field>
-              {profile.role === 'student' ? (
-                <Field label="Register number">{(p) => <Input {...p} {...register('regNo')} />}</Field>
-              ) : (
-                <Field label="Designation" optional>
-                  {(p) => <Input {...p} {...register('designation')} />}
+        <div className="space-y-6">
+          <Card>
+            <CardHeader title="Details" description="Your email can't be changed here." />
+            <CardBody>
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+                <Field label="Full name" error={errors.name?.message}>
+                  {(p) => <Input {...p} {...register('name')} />}
                 </Field>
-              )}
-              <div className="flex justify-end border-t border-line pt-4">
-                <Button type="submit" variant="primary" loading={isSubmitting} disabled={!isDirty}>
-                  Save changes
-                </Button>
-              </div>
-            </form>
-          </CardBody>
-        </Card>
+                <Field label="Department">
+                  {(p) => (
+                    <Select {...p} {...register('department')}>
+                      {departments.map((d) => (
+                        <option key={d}>{d}</option>
+                      ))}
+                    </Select>
+                  )}
+                </Field>
+                {profile.role === 'student' ? (
+                  <Field label="Register number">{(p) => <Input {...p} {...register('regNo')} />}</Field>
+                ) : (
+                  <Field label="Designation" optional>
+                    {(p) => <Input {...p} {...register('designation')} />}
+                  </Field>
+                )}
+                <div className="flex justify-end border-t border-line pt-4">
+                  <Button type="submit" variant="primary" loading={isSubmitting} disabled={!isDirty}>
+                    Save changes
+                  </Button>
+                </div>
+              </form>
+            </CardBody>
+          </Card>
+          <PasswordCard />
+        </div>
       </div>
     </>
   )

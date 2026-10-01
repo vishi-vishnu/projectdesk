@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, ClipboardCheck, FolderKanban } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { AnnouncementsCard } from '@/components/domain/AnnouncementsCard'
 import { StatCard } from '@/components/domain/StatCard'
 import { ProposalBadge } from '@/components/domain/StatusBadge'
 import { Badge, Card, CardHeader, EmptyState, ProgressBar, Skeleton } from '@/components/ui'
@@ -143,6 +144,7 @@ export function FacultyDashboard() {
         </div>
 
         <div className="space-y-6">
+          <AnnouncementsCard limit={3} />
           <Card>
             <CardHeader title="Review schedule" />
             <ul className="divide-y divide-line">

@@ -4,9 +4,10 @@
  */
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Copy, Crown, LogOut, MoreHorizontal, UserMinus } from 'lucide-react'
+import { AlarmClock, ArrowRight, Copy, Crown, LogOut, MoreHorizontal, UserMinus } from 'lucide-react'
 import { toast } from 'sonner'
 import { ActivityFeed } from '@/components/domain/ActivityFeed'
+import { AnnouncementsCard } from '@/components/domain/AnnouncementsCard'
 import { ReviewStepper } from '@/components/domain/ReviewStepper'
 import { StageBadge } from '@/components/domain/StatusBadge'
 import { Avatar, Badge, Button, Card, CardBody, CardHeader, Menu, MenuContent, MenuItem, MenuTrigger, Notice, ProgressBar } from '@/components/ui'
@@ -53,9 +54,26 @@ export function TeamOverview() {
   const nextState = next ? stageState(next, latest.get(next.id)) : null
   const orderedMembers = [...team.memberIds].sort((a, b) => (a === team.leadId ? -1 : b === team.leadId ? 1 : 0))
 
+  // Only nag when the team can actually upload (topic approved) and it is close.
+  const urgent =
+    perms.isMember && team.proposalStatus === 'approved' && next && (nextState === 'overdue' || nextState === 'due_soon')
+
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
       <div className="space-y-6">
+        {urgent && next && (
+          <Notice tone={nextState === 'overdue' ? 'bad' : 'warn'} icon={<AlarmClock />}>
+            <strong className="font-semibold">
+              {next.title.split(':')[0]} is {nextState === 'overdue' ? dueLabel(next.dueDate).toLowerCase() : dueLabel(next.dueDate).replace('Due', 'due')}.
+            </strong>{' '}
+            {nextState === 'overdue'
+              ? 'Upload your files as soon as you can. Late uploads are marked as late for your guide.'
+              : `Upload your files before ${formatDate(next.dueDate, 'EEEE, d MMM')}.`}{' '}
+            <Link to={`reviews/${next.id}`} className="font-medium text-brand hover:underline">
+              Open stage
+            </Link>
+          </Notice>
+        )}
         {perms.isMember && team.proposalStatus !== 'approved' && (
           <Notice tone={team.proposalStatus === 'changes_requested' ? 'warn' : 'brand'}>
             {team.proposalStatus === 'draft' && (
@@ -159,6 +177,7 @@ export function TeamOverview() {
       </div>
 
       <div className="space-y-6">
+        {viewer.role === 'student' && <AnnouncementsCard limit={3} />}
         {next && (
           <Card>
             <CardBody>

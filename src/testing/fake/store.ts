@@ -33,8 +33,8 @@ export class Timestamp {
 }
 
 type Json = unknown
-const DB_KEY = 'pd-fake-db-v1'
-const AUTH_KEY = 'pd-fake-auth-v1'
+const DB_KEY = 'pd-fake-db-v2'
+const AUTH_KEY = 'pd-fake-auth-v2'
 
 function encode(value: Json): Json {
   if (value instanceof Timestamp) return { __ts: value.toMillis() }
@@ -69,7 +69,7 @@ export function persist() {
 }
 
 function seed() {
-  const { users, cycle, teams } = buildSeed()
+  const { users, cycle, teams, announcements } = buildSeed()
   const ts = Timestamp.fromDate
   const byId = Object.fromEntries(users.map((u) => [u.uid, u]))
   for (const u of users) {
@@ -109,6 +109,8 @@ function seed() {
     for (const a of t.activity)
       docs.set(`teams/${t.id}/activity/${a.id}`, { type: a.type, actorId: a.actorId, actorName: byId[a.actorId].name, message: a.message, createdAt: ts(a.at) })
   }
+  for (const a of announcements)
+    docs.set(`announcements/${a.id}`, { title: a.title, body: a.body, audience: a.audience, authorId: a.authorId, authorName: byId[a.authorId].name, createdAt: ts(a.at) })
   persist()
 }
 

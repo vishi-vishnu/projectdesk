@@ -43,7 +43,10 @@ service cloud.firestore {
         || (isActive() && (me().role != 'student'
                            || existing().role != 'student'
                            || (me().teamId != null && existing().teamId == me().teamId)));
-      allow list: if isCoordinator();
+      // Coordinators list everyone. Anyone active may list active guides
+      // (students pick a preferred guide); the query must filter on both fields.
+      allow list: if isCoordinator()
+        || (isActive() && existing().role == 'faculty' && existing().status == 'active');
 
       // Students are active on sign-up; faculty must wait for coordinator approval.
       // Nobody can self-register as a coordinator.
@@ -152,9 +155,20 @@ service cloud.firestore {
         return isLead() && onlyChanged(['name', 'project', 'updatedAt'])
           && existing().proposalStatus in ['draft', 'changes_requested']
           && isText(incoming().name, 2, 60)
+          && incoming().project.keys().hasOnly(['title', 'abstract', 'domain', 'techStack', 'preferredGuideId'])
           && isText(incoming().project.title, 0, 150)
           && isText(incoming().project.abstract, 0, 3000)
-          && incoming().project.techStack is list && incoming().project.techStack.size() <= 12;
+          && optionalText(incoming().project, 'domain', 60)
+          && incoming().project.techStack is list && incoming().project.techStack.size() <= 12
+          && validPreferredGuide(incoming().project);
+      }
+
+      // A preference is optional, but if given it must name an active guide.
+      function validPreferredGuide(project) {
+        return !('preferredGuideId' in project) || project.preferredGuideId == null
+          || (project.preferredGuideId is string
+              && get(userPath(project.preferredGuideId)).data.role == 'faculty'
+              && get(userPath(project.preferredGuideId)).data.status == 'active');
       }
 
       function leadSubmitsProposal() {
@@ -302,6 +316,22 @@ service cloud.firestore {
         && request.resource.data.kind in ['comment', 'doubt']
         && request.resource.data.resolved == false
         && request.resource.data.createdAt == request.time;
+    }
+
+    // ---------- announcements ----------
+    // Posted by the coordinator, read by every active user. No edits: delete and post again.
+    match /announcements/{announcementId} {
+      allow read: if isActive();
+      allow create: if isCoordinator()
+        && incoming().keys().hasOnly(['title', 'body', 'audience', 'authorId', 'authorName', 'createdAt'])
+        && isText(incoming().title, 3, 120)
+        && isText(incoming().body, 3, 2000)
+        && incoming().audience in ['all', 'students', 'faculty']
+        && incoming().authorId == uid()
+        && incoming().authorName == myName()
+        && incoming().createdAt == request.time;
+      allow update: if false;
+      allow delete: if isCoordinator();
     }
 
     // Coordinators can query all submissions across teams (progress matrix).

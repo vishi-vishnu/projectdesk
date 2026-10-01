@@ -45,6 +45,8 @@ export interface ProjectDetails {
   abstract: string
   domain: string
   techStack: string[]
+  /** The guide the team would like; the coordinator makes the final choice. */
+  preferredGuideId?: string | null
 }
 
 export interface Team {
@@ -129,5 +131,17 @@ export interface Activity {
   actorId: string
   actorName: string
   message: string
+  createdAt: Timestamp
+}
+
+export type Audience = 'all' | 'students' | 'faculty'
+
+export interface Announcement {
+  id: string
+  title: string
+  body: string
+  audience: Audience
+  authorId: string
+  authorName: string
   createdAt: Timestamp
 }

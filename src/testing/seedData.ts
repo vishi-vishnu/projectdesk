@@ -53,6 +53,15 @@ export interface SeedSubmission {
   comments: SeedComment[]
 }
 
+export interface SeedAnnouncement {
+  id: string
+  title: string
+  body: string
+  audience: 'all' | 'students' | 'faculty'
+  authorId: string
+  at: Date
+}
+
 export interface SeedTeam {
   id: string
   name: string
@@ -60,7 +69,7 @@ export interface SeedTeam {
   memberIds: string[]
   guideId: string | null
   joinCode: string
-  project: { title: string; abstract: string; domain: string; techStack: string[] }
+  project: { title: string; abstract: string; domain: string; techStack: string[]; preferredGuideId?: string | null }
   proposalStatus: 'draft' | 'submitted' | 'approved' | 'changes_requested'
   proposalRemarks: string
   createdAt: Date
@@ -316,7 +325,7 @@ export function buildSeed(now = new Date()) {
       memberIds: ['stu-mohammed', 'stu-lavanya'],
       guideId: null,
       joinCode: 'VTX5H7',
-      project: { title: 'Sign Language to Speech using CNN', domain: 'Machine Learning', techStack: ['TensorFlow', 'MediaPipe'], abstract: '' },
+      project: { title: 'Sign Language to Speech using CNN', domain: 'Machine Learning', techStack: ['TensorFlow', 'MediaPipe'], abstract: '', preferredGuideId: 'fac-kavitha' },
       proposalStatus: 'draft',
       proposalRemarks: '',
       createdAt: at(-12),
@@ -326,7 +335,26 @@ export function buildSeed(now = new Date()) {
     },
   ]
 
-  return { users, cycle, teams }
+  const announcements: SeedAnnouncement[] = [
+    {
+      id: 'ann-r3-format',
+      title: 'Review 3 slides: use the department template',
+      body: 'Please use the updated department PPT template for Review 3. Keep it to 15 slides and add a demo video link on the last slide.',
+      audience: 'students',
+      authorId: 'coord-lakshmi',
+      at: at(-2),
+    },
+    {
+      id: 'ann-r2-marks',
+      title: 'Review 2 marks due this week',
+      body: 'Guides, please finish marking Review 2 by Friday so the internal marks can be sent to the exam cell.',
+      audience: 'faculty',
+      authorId: 'coord-lakshmi',
+      at: at(-1),
+    },
+  ]
+
+  return { users, cycle, teams, announcements }
 }
 
 export type Seed = ReturnType<typeof buildSeed>

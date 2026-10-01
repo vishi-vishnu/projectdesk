@@ -44,7 +44,7 @@ async function upsertAuthUser(uid: string, email: string, displayName: string) {
 }
 
 async function main() {
-  const { users, cycle, teams } = buildSeed()
+  const { users, cycle, teams, announcements } = buildSeed()
   console.log(`Seeding ${production ? `PRODUCTION project "${projectId}"` : 'local emulators'}…`)
 
   for (const u of users) await upsertAuthUser(u.uid, u.email, u.name)
@@ -142,6 +142,17 @@ async function main() {
       resolved: c.resolved,
       createdAt: ts(c.at),
     }
+  }
+
+  for (const a of announcements) {
+    set(`announcements/${a.id}`, {
+      title: a.title,
+      body: a.body,
+      audience: a.audience,
+      authorId: a.authorId,
+      authorName: byId[a.authorId].name,
+      createdAt: ts(a.at),
+    })
   }
 
   for (const b of batches) await b.commit()

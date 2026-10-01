@@ -9,6 +9,8 @@ import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import { AuthProvider } from '@/context/AuthContext'
+import { ThemeProvider } from '@/context/ThemeProvider'
+import { useTheme } from '@/context/theme-context'
 import { AppShell } from '@/components/layout/AppShell'
 import { FullPageSpinner, GuestOnly, RequireAuth, RequireRole } from '@/components/layout/Guards'
 import { Spinner } from '@/components/ui'
@@ -37,8 +39,20 @@ const PageFallback = () => (
   </div>
 )
 
+function ThemedToaster() {
+  const { resolved } = useTheme()
+  return (
+    <Toaster
+      position="bottom-right"
+      theme={resolved}
+      toastOptions={{ className: '!font-sans !text-[13.5px] !rounded-md !border-line !shadow-pop' }}
+    />
+  )
+}
+
 export default function App() {
   return (
+    <ThemeProvider>
     <AuthProvider>
       <BrowserRouter>
         <Suspense fallback={<FullPageSpinner />}>
@@ -69,12 +83,8 @@ export default function App() {
           </Routes>
         </Suspense>
       </BrowserRouter>
-      <Toaster
-        position="bottom-right"
-        toastOptions={{
-          className: '!font-sans !text-[13.5px] !rounded-md !border-line !shadow-pop',
-        }}
-      />
+      <ThemedToaster />
     </AuthProvider>
+    </ThemeProvider>
   )
 }

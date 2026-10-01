@@ -1,14 +1,23 @@
 import { useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { ChevronsUpDown, LogOut, Menu as MenuIcon, UserRound, X } from 'lucide-react'
+import { Check, ChevronsUpDown, LogOut, Menu as MenuIcon, Monitor, Moon, Sun, UserRound, X } from 'lucide-react'
 import { useProfile } from '@/context/auth-context'
+import { useTheme, type ThemePreference } from '@/context/theme-context'
 import { useActiveCycle } from '@/hooks/data'
 import { useSignOut } from '@/hooks/useSignOut'
 import { Avatar, cn, Menu, MenuContent, MenuItem, MenuLabel, MenuSeparator, MenuTrigger } from '@/components/ui'
 import { Logo } from './Logo'
+import { NotificationBell } from './NotificationBell'
 import { navFor, roleLabel } from './nav'
 
-function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
+const themeOptions: { value: ThemePreference; label: string; icon: typeof Sun }[] = [
+  { value: 'light', label: 'Light', icon: Sun },
+  { value: 'dark', label: 'Dark', icon: Moon },
+  { value: 'system', label: 'Match system', icon: Monitor },
+]
+
+function Sidebar({ onNavigate, showBell = true }: { onNavigate?: () => void; showBell?: boolean }) {
+  const { preference, setPreference } = useTheme()
   const profile = useProfile()
   const { cycle } = useActiveCycle()
   const location = useLocation()
@@ -18,8 +27,9 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex h-14 items-center px-4">
+      <div className="flex h-14 items-center justify-between pr-2 pl-4">
         <Logo />
+        {showBell && <NotificationBell />}
       </div>
 
       <div className="mx-3 mb-3 rounded-md border border-line bg-surface px-3 py-2">
@@ -67,6 +77,19 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             <MenuItem icon={<UserRound />} onSelect={() => navigate('/profile')}>
               Profile
             </MenuItem>
+            <MenuSeparator />
+            <MenuLabel>Theme</MenuLabel>
+            {themeOptions.map((t) => (
+              <MenuItem key={t.value} icon={<t.icon />} onSelect={() => setPreference(t.value)}>
+                <span className="flex-1">{t.label}</span>
+                {preference === t.value && (
+                  <span className="text-brand" aria-label="Selected">
+                    <Check className="size-3.5" />
+                  </span>
+                )}
+              </MenuItem>
+            ))}
+            <MenuSeparator />
             <MenuItem icon={<LogOut />} onSelect={() => void signOut()}>
               Sign out
             </MenuItem>
@@ -94,13 +117,16 @@ export function AppShell() {
       {/* Mobile top bar + drawer */}
       <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-line bg-surface/95 px-4 backdrop-blur lg:hidden">
         <Logo />
-        <button
-          onClick={() => setOpen(true)}
-          className="rounded-md p-2 text-ink-2 hover:bg-subtle"
-          aria-label="Open navigation"
-        >
-          <MenuIcon className="size-5" />
-        </button>
+        <div className="flex items-center gap-1">
+          <NotificationBell />
+          <button
+            onClick={() => setOpen(true)}
+            className="rounded-md p-2 text-ink-2 hover:bg-subtle"
+            aria-label="Open navigation"
+          >
+            <MenuIcon className="size-5" />
+          </button>
+        </div>
       </header>
       {open && (
         <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal="true" aria-label="Navigation">
@@ -113,7 +139,7 @@ export function AppShell() {
             >
               <X className="size-4" />
             </button>
-            <Sidebar onNavigate={() => setOpen(false)} />
+            <Sidebar onNavigate={() => setOpen(false)} showBell={false} />
           </aside>
         </div>
       )}
