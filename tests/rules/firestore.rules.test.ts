@@ -90,8 +90,8 @@ beforeEach(async () => {
     await setDoc(doc(db, 'users/outsider'), user('student'))
     await setDoc(doc(db, 'users/newbie'), user('student'))
     await setDoc(doc(db, 'cycles/c1'), {
-      name: 'Final Year 2025–26',
-      academicYear: '2025–26',
+      name: 'Final Year 2025-26',
+      academicYear: '2025-26',
       department: 'ECE',
       isActive: true,
       maxTeamSize: 3,

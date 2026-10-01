@@ -11,7 +11,7 @@ describe('validateFile', () => {
   it('rejects other types, empty and oversized files', () => {
     expect(validateFile({ name: 'app.exe', type: 'application/x-msdownload', size: 10 })).toMatch(/only PDF/)
     expect(validateFile({ name: 'a.pdf', type: 'application/pdf', size: 0 })).toMatch(/empty/)
-    expect(validateFile({ name: 'a.pdf', type: 'application/pdf', size: 16 * 1024 * 1024 })).toMatch(/15 MB/)
+    expect(validateFile({ name: 'a.pdf', type: 'application/pdf', size: 11 * 1024 * 1024 })).toMatch(/10 MB/)
   })
 })
 
@@ -27,7 +27,7 @@ describe('helpers', () => {
   })
 
   it('makes storage-safe names', () => {
-    expect(safeFileName('Review 2 — Final (v3).pdf')).toBe('Review-2-Final-v3.pdf')
+    expect(safeFileName('Review 2 + Final (v3).pdf')).toBe('Review-2-Final-v3.pdf')
     expect(safeFileName('../../etc/passwd')).not.toContain('/')
   })
 })

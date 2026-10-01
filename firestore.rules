@@ -1,6 +1,6 @@
 rules_version = '2';
 
-// ProjectDesk — Firestore security rules
+// ProjectDesk: Firestore security rules
 // The UI hides actions a user cannot take, but these rules are the real
 // enforcement: every write is checked here, server-side.
 
@@ -67,7 +67,7 @@ service cloud.firestore {
           && isText(incoming().department, 2, 80)
           && optionalText(incoming(), 'regNo', 40)
           && optionalText(incoming(), 'designation', 80))
-        // own team link — must agree with the team document after the batch
+        // own team link, which must agree with the team document after the batch
         || (signedIn() && uid() == userId && onlyChanged(['teamId']) && validOwnTeamLink(userId))
         // team lead removing a member
         || (signedIn() && onlyChanged(['teamId'])
@@ -287,7 +287,7 @@ service cloud.firestore {
       return files.size() <= i || (
         files[i].keys().hasOnly(['name', 'url', 'path', 'size', 'contentType', 'provider'])
         && isText(files[i].name, 1, 200)
-        && files[i].size is number && files[i].size <= 15 * 1024 * 1024
+        && files[i].size is number && files[i].size <= 10 * 1024 * 1024
         && files[i].provider in ['firebase', 'cloudinary', 'static']
         && files[i].url.matches('^(https://firebasestorage\\.googleapis\\.com/|https://res\\.cloudinary\\.com/|http://(127\\.0\\.0\\.1|localhost):9199/|/samples/).*'));
     }
