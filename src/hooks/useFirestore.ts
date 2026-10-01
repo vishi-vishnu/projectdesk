@@ -9,7 +9,7 @@ interface Result<T> {
 
 /**
  * Live document subscription. Pass `null` to skip (e.g. while an id is unknown).
- * `key` must change whenever the reference changes — refs aren't referentially stable.
+ * `key` must change whenever the reference changes, because refs aren't referentially stable.
  */
 export function useDocument<T>(ref: DocumentReference<T> | null, key: string | null): Result<T | null> {
   const [state, setState] = useState<Result<T | null> & { key: string | null }>({

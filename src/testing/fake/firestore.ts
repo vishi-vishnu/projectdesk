@@ -1,7 +1,7 @@
 /*
  * In-browser stand-in for `firebase/firestore`, used only for local UI tests
  * and screenshots when the Firestore emulator can't be downloaded
- * (VITE_FAKE_BACKEND=true — see vite.config.ts). It implements the subset of
+ * (VITE_FAKE_BACKEND=true, see vite.config.ts). It implements the subset of
  * the modular API this app uses. It does NOT enforce security rules; those are
  * covered by tests/rules against the real emulator.
  */

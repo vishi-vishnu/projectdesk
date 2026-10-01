@@ -1,3 +1,9 @@
+/**
+ * Shell for one team's workspace (/teams/:teamId/*).
+ * Loads the team, its cycle, submissions and member profiles once, works out
+ * what the current user may do (permissions), and passes it all to the tabs
+ * through React Router's Outlet context.
+ */
 import { useMemo } from 'react'
 import { NavLink, Outlet, useParams } from 'react-router-dom'
 import { FolderX } from 'lucide-react'

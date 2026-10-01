@@ -1,3 +1,8 @@
+/**
+ * First screen for a student without a team: create a team (and become the
+ * lead) or join one with the 6-character code. Students already in a team are
+ * redirected to their team page.
+ */
 import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { ArrowRight, CalendarX, KeyRound, Users } from 'lucide-react'
@@ -21,7 +26,7 @@ function CreateTeamCard({ cycleId }: { cycleId: string }) {
     setBusy(true)
     try {
       await createTeam({ name, cycleId }, { uid: profile.uid, name: profile.name })
-      toast.success('Team created — share the join code with your teammates')
+      toast.success('Team created. Share the join code with your teammates.')
     } catch (e) {
       toast.error(errorMessage(e))
       setBusy(false)
@@ -91,7 +96,7 @@ function JoinTeamCard() {
       setBusy(false)
       setError(
         e instanceof Error && 'code' in e && e.code === 'permission-denied'
-          ? 'Could not join — the team may be full.'
+          ? 'Could not join. The team may be full.'
           : errorMessage(e),
       )
     }

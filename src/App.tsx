@@ -1,3 +1,10 @@
+/**
+ * App routes.
+ * - /login and /register are only for signed-out users.
+ * - Everything else sits inside AppShell (sidebar + page) and needs an active account.
+ * - Role-only pages are wrapped in RequireRole, and pages are lazy-loaded so each
+ *   role only downloads the screens it uses.
+ */
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { Toaster } from 'sonner'

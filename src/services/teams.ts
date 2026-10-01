@@ -21,7 +21,7 @@ async function uniqueJoinCode(): Promise<string> {
 }
 
 /**
- * Creates the team, its join code and links the creator — all in one atomic
+ * Creates the team, its join code and links the creator, all in one atomic
  * batch so the rules can cross-check the three writes with getAfter().
  */
 export async function createTeam(input: { name: string; cycleId: string }, actor: Actor) {
@@ -65,7 +65,7 @@ export async function joinTeam(rawCode: string, info: JoinCodeInfo, actor: Actor
   const batch = writeBatch(db)
   batch.update(doc(db, 'teams', info.teamId), {
     memberIds: arrayUnion(actor.uid),
-    // Proof of the join code, bound to this user — checked by the security rules.
+    // Proof of the join code, bound to this user and checked by the security rules.
     lastJoin: { uid: actor.uid, code },
     updatedAt: serverTimestamp(),
   })

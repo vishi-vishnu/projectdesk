@@ -1,3 +1,7 @@
+/**
+ * Faculty guide dashboard: counts, the submissions and topics waiting for
+ * this guide, their teams' progress and the review schedule.
+ */
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, ClipboardCheck, FolderKanban } from 'lucide-react'
@@ -8,7 +12,7 @@ import { Badge, Card, CardHeader, EmptyState, ProgressBar, Skeleton } from '@/co
 import { useProfile } from '@/context/auth-context'
 import { useActiveCycle, useSubmissionsForTeams, useTeamsForGuide } from '@/hooks/data'
 import { dueLabel, formatDate, timeAgo } from '@/lib/format'
-import { isLateSubmission, teamProgress } from '@/lib/progress'
+import { isLateSubmission, teamProgress, stageTopic } from '@/lib/progress'
 import { buildQueue } from '@/lib/queue'
 
 export function FacultyDashboard() {
@@ -34,12 +38,12 @@ export function FacultyDashboard() {
       />
 
       <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard label="Assigned teams" value={loading ? '–' : teams.length} to="/teams" />
-        <StatCard label="Awaiting your review" value={loading ? '–' : queue.length} tone={queue.length ? 'warn' : undefined} to="/reviews" />
-        <StatCard label="Topics to approve" value={loading ? '–' : proposals.length} tone={proposals.length ? 'warn' : undefined} />
+        <StatCard label="Assigned teams" value={loading ? '...' : teams.length} to="/teams" />
+        <StatCard label="Awaiting your review" value={loading ? '...' : queue.length} tone={queue.length ? 'warn' : undefined} to="/reviews" />
+        <StatCard label="Topics to approve" value={loading ? '...' : proposals.length} tone={proposals.length ? 'warn' : undefined} />
         <StatCard
           label="Reviews completed"
-          value={loading ? '–' : `${accepted}`}
+          value={loading ? '...' : `${accepted}`}
           hint={totalStages ? `of ${totalStages} across your teams` : undefined}
         />
       </div>
@@ -146,7 +150,7 @@ export function FacultyDashboard() {
                 <li key={r.id} className="flex items-center justify-between gap-3 px-5 py-2.5">
                   <div className="min-w-0">
                     <p className="truncate text-[13.5px] font-medium">Review {i + 1}</p>
-                    <p className="truncate text-[12.5px] text-ink-3">{r.title.split(' — ')[1] ?? r.title}</p>
+                    <p className="truncate text-[12.5px] text-ink-3">{stageTopic(r.title)}</p>
                   </div>
                   <div className="shrink-0 text-right">
                     <p className="tabular text-[13px]">{formatDate(r.dueDate, 'd MMM')}</p>

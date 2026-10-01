@@ -20,6 +20,15 @@ const STAGE_LABELS: Record<StageState, string> = {
 
 export const stageStateLabel = (state: StageState) => STAGE_LABELS[state]
 
+/** "Review 2: System design" -> "Review 2" */
+export const stageShortName = (title: string) => title.split(':')[0].trim()
+
+/** "Review 2: System design" -> "System design" */
+export const stageTopic = (title: string) => {
+  const i = title.indexOf(':')
+  return i === -1 ? title : title.slice(i + 1).trim()
+}
+
 const DUE_SOON_DAYS = 7
 const DAY = 24 * 60 * 60 * 1000
 
@@ -61,7 +70,7 @@ export interface TeamProgress {
   maxMarks: number
   /** First stage that is not yet accepted, in order. */
   nextStage: ReviewStage | null
-  /** 0–100, weighted by stage count; proposal approval counts as a step. */
+  /** 0 to 100, weighted by stage count; proposal approval counts as a step. */
   percent: number
 }
 

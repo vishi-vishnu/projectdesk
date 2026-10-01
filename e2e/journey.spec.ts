@@ -62,7 +62,7 @@ test('full project journey: register → team → proposal → guide → review 
   // 6. Student uploads Review 1
   await signIn(page, 'asha@college.edu', 'asha-password')
   await page.getByRole('link', { name: 'Reviews', exact: true }).click()
-  await page.getByRole('link', { name: /Review 1 — Problem & literature survey/ }).click()
+  await page.getByRole('link', { name: /Review 1: Problem & literature survey/ }).click()
   await page.getByLabel('Choose files to upload').setInputFiles(['e2e/fixtures/sample-report.pdf', 'e2e/fixtures/sample-diagram.png'])
   await expect(page.getByText('sample-report.pdf')).toBeVisible()
   await page.getByRole('button', { name: 'Submit for review' }).click()
@@ -93,7 +93,7 @@ test('full project journey: register → team → proposal → guide → review 
   // 8. Student sees the result
   await signIn(page, users.gokul)
   await expect(page.getByText('17 / 20')).toBeVisible()
-  await page.getByRole('link', { name: 'Review 1 — Problem & literature survey' }).click()
+  await page.getByRole('link', { name: 'Review 1: Problem & literature survey' }).click()
   await expect(page.getByText('Accepted by Prof. K. Arvind')).toBeVisible()
   await expect(page.getByText('Good survey. Add a comparison table.')).toBeVisible()
 })
@@ -128,9 +128,9 @@ test('uploader rejects unsupported and oversized files', async ({ page }) => {
   await page.getByLabel('Choose files to upload').setInputFiles({
     name: 'huge.pdf',
     mimeType: 'application/pdf',
-    buffer: Buffer.alloc(16 * 1024 * 1024),
+    buffer: Buffer.alloc(11 * 1024 * 1024),
   })
-  await expect(page.getByText(/The limit is 15 MB per file/)).toBeVisible()
+  await expect(page.getByText(/The limit is 10 MB per file/)).toBeVisible()
 })
 
 test('coordinator approves a pending faculty account', async ({ page }) => {
@@ -146,8 +146,8 @@ test('coordinator edits the review schedule', async ({ page }) => {
   await signIn(page, users.coordinator)
   await page.getByRole('link', { name: 'Review schedule' }).click()
   await page.getByRole('button', { name: 'Edit schedule' }).click()
-  await page.getByLabel('Stage 3 title').fill('Review 3 — Prototype demo')
+  await page.getByLabel('Stage 3 title').fill('Review 3: Prototype demo')
   await page.getByRole('button', { name: 'Save schedule' }).click()
   await expect(page.getByText('Schedule updated')).toBeVisible()
-  await expect(page.getByText('Review 3 — Prototype demo')).toBeVisible()
+  await expect(page.getByText('Review 3: Prototype demo')).toBeVisible()
 })

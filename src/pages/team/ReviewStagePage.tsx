@@ -1,3 +1,9 @@
+/**
+ * One review stage (for example Review 2).
+ * Students upload files (each resubmission becomes a new version), everyone
+ * comments on the selected version, and the guide accepts or requests changes
+ * with marks.
+ */
 import { useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Check, Clock, History, RotateCcw, Upload } from 'lucide-react'
@@ -8,7 +14,7 @@ import { FileUploader, type QueuedFile } from '@/components/domain/FileUploader'
 import { StageBadge } from '@/components/domain/StatusBadge'
 import { Badge, Button, Card, CardBody, CardHeader, cn, EmptyState, Field, Input, Notice, Textarea } from '@/components/ui'
 import { dueLabel, formatDate, formatDateTime, timeAgo } from '@/lib/format'
-import { isLateSubmission, stageState } from '@/lib/progress'
+import { isLateSubmission, stageState, stageShortName } from '@/lib/progress'
 import { storageProvider, UploadCancelledError } from '@/lib/storage'
 import type { FileRef, ReviewStage, Submission } from '@/lib/types'
 import { createSubmission, evaluateSubmission, newSubmissionId } from '@/services/submissions'
@@ -17,8 +23,8 @@ import { useTeamContext } from './TeamContext'
 
 function SubmitForm({ stage, nextVersion, onDone }: { stage: ReviewStage; nextVersion: number; onDone: () => void }) {
   const { team, viewer } = useTeamContext()
-  const stageShort = stage.title.split(' — ')[0]
-  const [title, setTitle] = useState(nextVersion > 1 ? `${stageShort} — revised` : `${stageShort} submission`)
+  const stageShort = stageShortName(stage.title)
+  const [title, setTitle] = useState(nextVersion > 1 ? `${stageShort} (revised)` : `${stageShort} submission`)
   const [notes, setNotes] = useState('')
   const [queue, setQueue] = useState<QueuedFile[]>([])
   const [uploading, setUploading] = useState(false)
@@ -125,7 +131,7 @@ function EvaluationForm({ stage, submission }: { stage: ReviewStage; submission:
         description={`Version ${submission.version} · out of ${stage.maxMarks} marks`}
       />
       <CardBody className="space-y-3">
-        <Field label="Marks" hint={`0 – ${stage.maxMarks}`}>
+        <Field label="Marks" hint={`0 to ${stage.maxMarks}`}>
           {(p) => (
             <Input
               type="number"

@@ -1,7 +1,7 @@
 import { initials } from '@/lib/format'
 import { cn } from './cn'
 
-// Muted, distinguishable fills — picked from the name so a person keeps their colour.
+// Muted, distinguishable fills, picked from the name so a person keeps their colour.
 const fills = ['#dfe7f3', '#e5efe6', '#f3e9dc', '#ece4f1', '#e2eef0', '#f1e3e3', '#e8e8df']
 const inks = ['#1f4f99', '#17663d', '#8a4f00', '#5b3a7a', '#1e6070', '#8f2f2a', '#4d4d40']
 

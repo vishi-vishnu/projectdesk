@@ -1,3 +1,7 @@
+/**
+ * Coordinator overview: headline numbers and a progress matrix showing every
+ * team's status at every review stage.
+ */
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, CalendarPlus, LayoutGrid } from 'lucide-react'
@@ -6,7 +10,7 @@ import { StatCard } from '@/components/domain/StatCard'
 import { Button, Card, CardHeader, cn, EmptyState, Skeleton } from '@/components/ui'
 import { useActiveCycle, useCycleSubmissions, useTeamsForCycle, useUsersByRole } from '@/hooks/data'
 import { dueLabel, formatDate } from '@/lib/format'
-import { latestByReview, stageState, stageStateLabel, type StageState } from '@/lib/progress'
+import { latestByReview, stageState, stageStateLabel, type StageState, stageShortName } from '@/lib/progress'
 import type { Submission } from '@/lib/types'
 
 const cell: Record<StageState, string> = {
@@ -95,7 +99,7 @@ export function CoordinatorDashboard() {
       />
 
       <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
-        <StatCard label="Teams registered" value={teamsLoading ? '–' : teams.length} hint={`${topicsApproved} topics approved`} to="/teams" />
+        <StatCard label="Teams registered" value={teamsLoading ? '...' : teams.length} hint={`${topicsApproved} topics approved`} to="/teams" />
         <StatCard
           label="Students"
           value={students.length}
@@ -103,12 +107,12 @@ export function CoordinatorDashboard() {
           tone={withoutTeam ? 'warn' : undefined}
           to="/people?tab=students"
         />
-        <StatCard label="Teams without a guide" value={teamsLoading ? '–' : unassigned} tone={unassigned ? 'warn' : undefined} to="/teams" />
+        <StatCard label="Teams without a guide" value={teamsLoading ? '...' : unassigned} tone={unassigned ? 'warn' : undefined} to="/teams" />
         <StatCard label="Faculty guides" value={activeFaculty} hint={pendingFaculty ? `${pendingFaculty} awaiting approval` : undefined} to="/people" />
         <StatCard
           label="Next review"
-          value={nextStage ? formatDate(nextStage.dueDate, 'd MMM') : '—'}
-          hint={nextStage ? `${nextStage.title.split(' — ')[0]} · ${dueLabel(nextStage.dueDate)}` : 'All reviews completed'}
+          value={nextStage ? formatDate(nextStage.dueDate, 'd MMM') : '-'}
+          hint={nextStage ? `${stageShortName(nextStage.title)} · ${dueLabel(nextStage.dueDate)}` : 'All reviews completed'}
           to="/cycles"
         />
       </div>

@@ -15,7 +15,7 @@ export interface RegisterInput {
 
 /**
  * Students are active immediately. Faculty accounts start as "pending" until a
- * coordinator approves them — enforced in firestore.rules, not just here.
+ * coordinator approves them. This is enforced in firestore.rules, not just here.
  */
 export async function registerAccount(input: RegisterInput) {
   const cred = await createUserWithEmailAndPassword(auth, input.email.trim(), input.password)

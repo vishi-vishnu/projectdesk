@@ -4,10 +4,10 @@ import { Logo } from '@/components/layout/Logo'
 
 const stages = [
   { name: 'Topic approval', state: 'Approved', tone: 'text-ok' },
-  { name: 'Review 1 — Literature survey', state: 'Accepted · 18/20', tone: 'text-ok' },
-  { name: 'Review 2 — System design', state: 'Changes requested', tone: 'text-warn' },
-  { name: 'Review 3 — Implementation', state: 'Due 14 Mar', tone: 'text-ink-3' },
-  { name: 'Review 4 — Final demo & report', state: 'Due 11 Apr', tone: 'text-ink-3' },
+  { name: 'Review 1: Literature survey', state: 'Accepted · 18/20', tone: 'text-ok' },
+  { name: 'Review 2: System design', state: 'Changes requested', tone: 'text-warn' },
+  { name: 'Review 3: Implementation', state: 'Due 14 Mar', tone: 'text-ink-3' },
+  { name: 'Review 4: Final demo & report', state: 'Due 11 Apr', tone: 'text-ink-3' },
 ]
 
 export function AuthLayout({ children }: { children: ReactNode }) {
@@ -25,7 +25,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
         <div className="max-w-[460px]">
           <p className="text-[12px] font-medium tracking-wide text-ink-3 uppercase">How it works</p>
           <h2 className="mt-2 text-[24px] leading-snug font-semibold tracking-[-0.015em] text-ink">
-            Every review, every file and every remark — tracked from topic approval to final viva.
+            Every review, file and remark in one place, from topic approval to the final viva.
           </h2>
 
           <div className="mt-8 rounded-lg border border-line bg-surface shadow-card">
@@ -49,7 +49,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
           <ul className="mt-8 space-y-3 text-[13.5px] text-ink-2">
             <li className="flex gap-3">
               <FileText className="mt-0.5 size-4 shrink-0 text-ink-3" aria-hidden />
-              Upload review PPTs, reports and screenshots — every resubmission is kept as a version.
+              Upload review PPTs, reports and screenshots. Every resubmission is kept as a new version.
             </li>
             <li className="flex gap-3">
               <MessageSquare className="mt-0.5 size-4 shrink-0 text-ink-3" aria-hidden />

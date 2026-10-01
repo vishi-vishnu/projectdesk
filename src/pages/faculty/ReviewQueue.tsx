@@ -1,3 +1,7 @@
+/**
+ * Review queue for a guide: the latest submission for every team and stage,
+ * filtered by status (awaiting review, changes requested, accepted).
+ */
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ClipboardCheck } from 'lucide-react'

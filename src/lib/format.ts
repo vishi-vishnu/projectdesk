@@ -12,7 +12,7 @@ export function toDate(value: DateLike): Date | null {
 
 export function formatDate(value: DateLike, pattern = 'd MMM yyyy'): string {
   const d = toDate(value)
-  return d ? format(d, pattern) : '—'
+  return d ? format(d, pattern) : '-'
 }
 
 export function formatDateTime(value: DateLike): string {

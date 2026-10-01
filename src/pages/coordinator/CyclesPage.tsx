@@ -1,3 +1,7 @@
+/**
+ * Review schedule. A project cycle holds the team size limit and the review
+ * stages (title, due date, marks). Only one cycle is active at a time.
+ */
 import { useState } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -25,7 +29,7 @@ const stageSchema = z.object({
 
 const schema = z.object({
   name: z.string().trim().min(3, 'Give the cycle a name.').max(100),
-  academicYear: z.string().trim().min(4, 'e.g. 2025–26'),
+  academicYear: z.string().trim().min(4, 'For example 2025-26'),
   department: z.string().min(1, 'Choose a department.'),
   maxTeamSize: z.coerce.number<number>().int().min(1).max(6),
   reviews: z.array(stageSchema).min(1, 'Add at least one review stage.').max(8),
@@ -46,8 +50,8 @@ function defaults(cycle?: Cycle): Values {
   }
   const year = new Date().getFullYear()
   return {
-    name: `Final Year Project ${year}–${String(year + 1).slice(2)}`,
-    academicYear: `${year}–${String(year + 1).slice(2)}`,
+    name: `Final Year Project ${year}-${String(year + 1).slice(2)}`,
+    academicYear: `${year}-${String(year + 1).slice(2)}`,
     department: '',
     maxTeamSize: 4,
     reviews: DEFAULT_REVIEWS.map((r) => ({

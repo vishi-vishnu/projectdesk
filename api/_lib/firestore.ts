@@ -8,7 +8,7 @@ interface FirestoreTeamDoc {
 
 /**
  * Reads the team document through the Firestore REST API *as the calling user*
- * (their ID token is forwarded). Security rules therefore decide access — the
+ * (their ID token is forwarded). Security rules therefore decide access, and the
  * function holds no privileged credentials.
  */
 export async function fetchTeamMemberIds(projectId: string, teamId: string, idToken: string) {

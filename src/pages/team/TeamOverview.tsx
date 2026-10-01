@@ -1,3 +1,7 @@
+/**
+ * Team home: progress tracker, review stages with marks, members (with the
+ * join code), the assigned guide and recent activity.
+ */
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Copy, Crown, LogOut, MoreHorizontal, UserMinus } from 'lucide-react'
@@ -126,7 +130,7 @@ export function TeamOverview() {
                         <StageBadge state={stageState(r, sub)} />
                       </td>
                       <td className="tabular px-5 py-2.5 text-right text-ink-2">
-                        {sub?.evaluation ? `${sub.evaluation.marks} / ${r.maxMarks}` : `— / ${r.maxMarks}`}
+                        {sub?.evaluation ? `${sub.evaluation.marks} / ${r.maxMarks}` : `- / ${r.maxMarks}`}
                       </td>
                     </tr>
                   )
@@ -163,7 +167,7 @@ export function TeamOverview() {
               <p className="mt-1 text-[13px] text-ink-3">
                 {formatDate(next.dueDate, 'EEEE, d MMMM')} ·{' '}
                 {nextState === 'changes_requested' ? (
-                  <span className="text-warn">Changes requested — resubmit</span>
+                  <span className="text-warn">Changes requested, please resubmit</span>
                 ) : (
                   <span className={nextState === 'overdue' ? 'text-bad' : ''}>{dueLabel(next.dueDate)}</span>
                 )}

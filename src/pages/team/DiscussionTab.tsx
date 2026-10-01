@@ -17,7 +17,7 @@ export function DiscussionTab() {
             viewer={viewer}
             canPost={perms.isMember || perms.canEvaluate}
             emptyTitle="No messages yet"
-            emptyDescription="Ask a doubt or post an update — your guide sees everything here."
+            emptyDescription="Ask a doubt or post an update. Your guide sees everything here."
             placeholder="Write a message… (Ctrl + Enter to post)"
           />
         </CardBody>

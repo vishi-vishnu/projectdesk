@@ -1,3 +1,8 @@
+/**
+ * Project proposal (topic approval).
+ * The team lead edits and submits the title and abstract; the guide approves
+ * it or sends it back with remarks. Review uploads unlock after approval.
+ */
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -91,7 +96,7 @@ function ProposalForm() {
       <Field label="Project title" error={errors.title?.message}>
         {(p) => <Input placeholder="e.g. Smart irrigation using soil-moisture sensing and LoRa" {...p} {...register('title')} />}
       </Field>
-      <Field label="Tools & technologies" optional hint="Comma separated — e.g. ESP32, Python, Firebase">
+      <Field label="Tools & technologies" optional hint="Comma separated, for example ESP32, Python, Firebase">
         {(p) => <Input {...p} {...register('techStack')} />}
       </Field>
       <Field
@@ -184,23 +189,23 @@ export function ProposalTab() {
               <dl className="space-y-5">
                 <div>
                   <dt className="text-[12px] font-medium text-ink-3">Title</dt>
-                  <dd className="mt-0.5 text-[15px] font-medium">{p.title || '—'}</dd>
+                  <dd className="mt-0.5 text-[15px] font-medium">{p.title || 'Not added yet'}</dd>
                 </div>
                 <div className="grid gap-5 sm:grid-cols-2">
                   <div>
                     <dt className="text-[12px] font-medium text-ink-3">Domain</dt>
-                    <dd className="mt-0.5">{p.domain || '—'}</dd>
+                    <dd className="mt-0.5">{p.domain || 'Not added yet'}</dd>
                   </div>
                   <div>
                     <dt className="text-[12px] font-medium text-ink-3">Tools & technologies</dt>
                     <dd className="mt-1 flex flex-wrap gap-1.5">
-                      {p.techStack.length ? p.techStack.map((t) => <Badge key={t}>{t}</Badge>) : '—'}
+                      {p.techStack.length ? p.techStack.map((t) => <Badge key={t}>{t}</Badge>) : 'Not added yet'}
                     </dd>
                   </div>
                 </div>
                 <div>
                   <dt className="text-[12px] font-medium text-ink-3">Abstract</dt>
-                  <dd className="mt-1 max-w-[70ch] leading-relaxed whitespace-pre-wrap text-ink-2">{p.abstract || '—'}</dd>
+                  <dd className="mt-1 max-w-[70ch] leading-relaxed whitespace-pre-wrap text-ink-2">{p.abstract || 'Not added yet'}</dd>
                 </div>
                 {team.proposalStatus !== 'changes_requested' && team.proposalRemarks && (
                   <div>

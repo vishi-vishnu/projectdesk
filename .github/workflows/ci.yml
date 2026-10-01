@@ -97,4 +97,4 @@ jobs:
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
       - name: Skipped
         if: env.HAS_CREDENTIALS != 'true'
-        run: echo "FIREBASE_SERVICE_ACCOUNT secret not set — skipping rules deploy."
+        run: echo "FIREBASE_SERVICE_ACCOUNT secret not set, skipping rules deploy."

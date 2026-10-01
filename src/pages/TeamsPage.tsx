@@ -1,3 +1,7 @@
+/**
+ * Teams list. Coordinators see every team in the active cycle, can assign a
+ * guide and export marks to CSV. Faculty see only the teams they guide.
+ */
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Download, FolderKanban, Search } from 'lucide-react'
@@ -113,7 +117,7 @@ function TeamsTable({
                   {manage ? (
                     <GuideSelect team={t} faculty={faculty} />
                   ) : (
-                    <span className="text-ink-2">{t.guideId ? (facultyById[t.guideId]?.name ?? '—') : 'Unassigned'}</span>
+                    <span className="text-ink-2">{t.guideId ? (facultyById[t.guideId]?.name ?? '-') : 'Unassigned'}</span>
                   )}
                 </td>
                 <td className="px-3 py-3">

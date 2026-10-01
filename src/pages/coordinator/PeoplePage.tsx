@@ -1,3 +1,7 @@
+/**
+ * People: approve or reject faculty sign-ups, and see which students have
+ * not joined a team yet.
+ */
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Check, Search, UserX, Users } from 'lucide-react'
@@ -106,7 +110,7 @@ function FacultyTab() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-3 py-2.5 text-ink-2">{u.designation || '—'}</td>
+                    <td className="px-3 py-2.5 text-ink-2">{u.designation || '-'}</td>
                     <td className="tabular px-3 py-2.5 text-ink-2">{load(u.uid)}</td>
                     <td className="px-3 py-2.5">
                       <AccountBadge status={u.status} />
@@ -181,7 +185,7 @@ function StudentsTab() {
                       <p className="font-medium">{s.name}</p>
                       <p className="text-[12.5px] text-ink-3">{s.email}</p>
                     </td>
-                    <td className="px-3 py-2.5 font-mono text-[12.5px] text-ink-2">{s.regNo || '—'}</td>
+                    <td className="px-3 py-2.5 font-mono text-[12.5px] text-ink-2">{s.regNo || '-'}</td>
                     <td className="px-3 py-2.5">
                       {team ? (
                         <Link to={`/teams/${team.id}`} className="hover:text-brand hover:underline">

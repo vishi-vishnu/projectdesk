@@ -1,4 +1,4 @@
-/* In-browser stand-in for `firebase/app` (UI tests only — see vite.config.ts). */
+/* In-browser stand-in for `firebase/app` (UI tests only, see vite.config.ts). */
 export class FirebaseError extends Error {
   code: string
   constructor(code: string, message: string) {

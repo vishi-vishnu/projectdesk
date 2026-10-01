@@ -1,3 +1,7 @@
+/**
+ * Real-time data hooks for each part of the app. Each hook builds a Firestore
+ * query and subscribes to it, so screens update as soon as data changes.
+ */
 import { useEffect, useMemo, useState } from 'react'
 import { collectionGroup, onSnapshot, orderBy, query, where, type Query } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
@@ -75,7 +79,7 @@ export function useCycleSubmissions(cycleId: string | null | undefined) {
 
 /**
  * Submissions for several teams at once (faculty dashboards). One listener per
- * team — a guide typically has fewer than ten teams.
+ * team, since a guide typically has fewer than ten teams.
  */
 export function useSubmissionsForTeams(teamIds: string[]) {
   const key = [...teamIds].sort().join(',')

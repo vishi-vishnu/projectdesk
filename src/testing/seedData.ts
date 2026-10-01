@@ -129,18 +129,18 @@ export function buildSeed(now = new Date()) {
 
   const cycle = {
     id: 'cycle-2025-26',
-    name: 'Final Year Project 2025–26',
-    academicYear: '2025–26',
+    name: 'Final Year Project 2025-26',
+    academicYear: '2025-26',
     department: DEPT,
     isActive: true,
     maxTeamSize: 4,
     createdBy: 'coord-lakshmi',
     createdAt: at(-75),
     reviews: [
-      { id: 'r1', title: 'Review 1 — Problem & literature survey', description: 'Problem statement, objectives, existing systems and a literature survey of at least 10 papers. Submit the review PPT.', maxMarks: 20, dueDate: at(-32) },
-      { id: 'r2', title: 'Review 2 — System design', description: 'Architecture diagram, module breakdown, data flow / UML diagrams and the tools you will use. Submit PPT and design document.', maxMarks: 20, dueDate: at(-3) },
-      { id: 'r3', title: 'Review 3 — Implementation progress', description: 'At least 60% of the implementation complete. Show working modules with screenshots and the updated PPT.', maxMarks: 25, dueDate: at(19) },
-      { id: 'r4', title: 'Review 4 — Final demo & report', description: 'Complete working demo, results and discussion, and the final project report (PDF) in the university format.', maxMarks: 35, dueDate: at(47) },
+      { id: 'r1', title: 'Review 1: Problem & literature survey', description: 'Problem statement, objectives, existing systems and a literature survey of at least 10 papers. Submit the review PPT.', maxMarks: 20, dueDate: at(-32) },
+      { id: 'r2', title: 'Review 2: System design', description: 'Architecture diagram, module breakdown, data flow / UML diagrams and the tools you will use. Submit PPT and design document.', maxMarks: 20, dueDate: at(-3) },
+      { id: 'r3', title: 'Review 3: Implementation progress', description: 'At least 60% of the implementation complete. Show working modules with screenshots and the updated PPT.', maxMarks: 25, dueDate: at(19) },
+      { id: 'r4', title: 'Review 4: Final demo & report', description: 'Complete working demo, results and discussion, and the final project report (PDF) in the university format.', maxMarks: 35, dueDate: at(47) },
     ],
   }
 
@@ -157,25 +157,25 @@ export function buildSeed(now = new Date()) {
         domain: 'IoT',
         techStack: ['ESP32', 'LoRa SX1278', 'Capacitive soil sensor', 'Firebase', 'Flutter'],
         abstract:
-          'Small farms in Tamil Nadu still irrigate on a fixed schedule, wasting water during rain and under-watering in dry spells. We propose a low-power sensor network that measures soil moisture at root depth and sends readings over LoRa to a gateway up to 2 km away. The gateway switches the pump through a relay only when moisture drops below a crop-specific threshold, and a mobile app shows live readings and pump history. We expect a 30–40% reduction in water use compared to timer-based irrigation on a 1-acre test plot.',
+          'Small farms in Tamil Nadu still irrigate on a fixed schedule, wasting water during rain and under-watering in dry spells. We propose a low-power sensor network that measures soil moisture at root depth and sends readings over LoRa to a gateway up to 2 km away. The gateway switches the pump through a relay only when moisture drops below a crop-specific threshold, and a mobile app shows live readings and pump history. We expect a 30 to 40% reduction in water use compared to timer-based irrigation on a 1-acre test plot.',
       },
       proposalStatus: 'approved',
       proposalRemarks: 'Good scope. Please include a comparison with GSM-based systems in Review 1.',
       createdAt: at(-70),
       submissions: [
         {
-          id: 'aurora-r1-v1', reviewId: 'r1', version: 1, title: 'Review 1 — Literature survey',
+          id: 'aurora-r1-v1', reviewId: 'r1', version: 1, title: 'Review 1: Literature survey',
           notes: 'Literature survey of 12 papers and the problem statement. Comparison with GSM-based systems is on slide 9.',
           files: [file('review1-literature-survey.pdf', PDF, 4169), file('review1-slides.pptx', PPTX, 32895)],
           submittedBy: 'stu-arjun', at: at(-33, -4), status: 'accepted',
           evaluation: { marks: 18, remarks: 'Well-organised survey. Cite the 2023 LoRaWAN field study as well.', by: 'fac-meena', at: at(-30) },
           comments: [
-            { id: 'c1', authorId: 'fac-meena', body: 'Slide 6: the table of existing systems should include cost per node — that is your main argument.', kind: 'comment', resolved: false, at: at(-31) },
+            { id: 'c1', authorId: 'fac-meena', body: 'Slide 6: the table of existing systems should include cost per node. That is your main argument.', kind: 'comment', resolved: false, at: at(-31) },
             { id: 'c2', authorId: 'stu-divya', body: 'Added the cost column, ma. We will carry it into the design review.', kind: 'comment', resolved: false, at: at(-31, 3) },
           ],
         },
         {
-          id: 'aurora-r2-v1', reviewId: 'r2', version: 1, title: 'Review 2 — System design',
+          id: 'aurora-r2-v1', reviewId: 'r2', version: 1, title: 'Review 2: System design',
           notes: 'Block diagram, sensor node circuit and the data flow between node, gateway and app.',
           files: [file('review2-system-design.pdf', PDF, 77194), file('architecture-diagram.png', PNG, 71337)],
           submittedBy: 'stu-arjun', at: at(-5), status: 'changes_requested',
@@ -187,7 +187,7 @@ export function buildSeed(now = new Date()) {
           ],
         },
         {
-          id: 'aurora-r2-v2', reviewId: 'r2', version: 2, title: 'Review 2 — revised design',
+          id: 'aurora-r2-v2', reviewId: 'r2', version: 2, title: 'Review 2: revised design',
           notes: 'Added the gateway to the block diagram and a power budget (slide 11): ~14 months on 2×AA at SF9.',
           files: [file('review2-system-design-v2.pdf', PDF, 77692), file('architecture-diagram.png', PNG, 71337)],
           submittedBy: 'stu-divya', at: at(-1, -2), status: 'submitted', evaluation: null,
@@ -196,7 +196,7 @@ export function buildSeed(now = new Date()) {
       ],
       discussion: [
         { id: 'd1', authorId: 'stu-sneha', body: 'Is the report format the same as last year (Anna University template, 1.5 spacing)?', kind: 'doubt', resolved: true, at: at(-20) },
-        { id: 'd2', authorId: 'fac-meena', body: 'Yes, same template. I have shared it with Arjun — please keep the chapter numbering as in the template.', kind: 'comment', resolved: false, at: at(-19) },
+        { id: 'd2', authorId: 'fac-meena', body: 'Yes, same template. I have shared it with Arjun. Please keep the chapter numbering as in the template.', kind: 'comment', resolved: false, at: at(-19) },
         { id: 'd3', authorId: 'stu-arjun', body: 'Field testing is planned for next Saturday at the college farm. Karthik is arranging the pump relay.', kind: 'comment', resolved: false, at: at(-2) },
         { id: 'd4', authorId: 'stu-karthik', body: 'Can we use a 12V DC pump for the demo instead of the 0.5 HP motor? The relay board is rated for 10A.', kind: 'doubt', resolved: false, at: at(-1) },
       ],
@@ -234,14 +234,14 @@ export function buildSeed(now = new Date()) {
       createdAt: at(-68),
       submissions: [
         {
-          id: 'nexus-r1-v1', reviewId: 'r1', version: 1, title: 'Review 1 — Literature survey', notes: '',
+          id: 'nexus-r1-v1', reviewId: 'r1', version: 1, title: 'Review 1: Literature survey', notes: '',
           files: [file('review1-literature-survey.pdf', PDF, 4169)],
           submittedBy: 'stu-harish', at: at(-34), status: 'accepted',
           evaluation: { marks: 17, remarks: 'Good. Add the dataset you will use for testing.', by: 'fac-meena', at: at(-31) },
           comments: [],
         },
         {
-          id: 'nexus-r2-v1', reviewId: 'r2', version: 1, title: 'Review 2 — System design', notes: 'Includes the processing pipeline and timing analysis.',
+          id: 'nexus-r2-v1', reviewId: 'r2', version: 1, title: 'Review 2: System design', notes: 'Includes the processing pipeline and timing analysis.',
           files: [file('review2-system-design.pdf', PDF, 77194), file('review1-slides.pptx', PPTX, 32895)],
           submittedBy: 'stu-priya', at: at(-6), status: 'accepted',
           evaluation: { marks: 16, remarks: 'Clear pipeline. Frame-rate analysis on slide 8 is useful.', by: 'fac-meena', at: at(-2) },

@@ -3,6 +3,7 @@ import { db } from '@/lib/firebase'
 import type { FileRef, ReviewStage, Role, SubmissionStatus, Team } from '@/lib/types'
 import { logActivity, type Actor } from './activity'
 import type { CommentScope } from './refs'
+import { stageShortName } from '@/lib/progress'
 
 /** Reserve an id up front so uploaded files can live under the submission's path. */
 export function newSubmissionId(teamId: string) {
@@ -37,7 +38,7 @@ export async function createSubmission(
     evaluation: null,
     createdAt: serverTimestamp(),
   })
-  const label = version > 1 ? `resubmitted ${stage.title.split(' — ')[0]} (v${version})` : `submitted ${stage.title.split(' — ')[0]}`
+  const label = version > 1 ? `resubmitted ${stageShortName(stage.title)} (v${version})` : `submitted ${stageShortName(stage.title)}`
   logActivity(batch, team.id, 'submission_created', actor, `${actor.name} ${label}`)
   await batch.commit()
 }
@@ -65,7 +66,7 @@ export async function evaluateSubmission(
       evaluatedAt: serverTimestamp(),
     },
   })
-  const stageName = stage.title.split(' — ')[0]
+  const stageName = stageShortName(stage.title)
   const verb = status === 'accepted' ? `accepted ${stageName} with ${marks}/${stage.maxMarks}` : `requested changes on ${stageName}`
   logActivity(batch, teamId, 'submission_evaluated', actor, `${actor.name} ${verb}`)
   await batch.commit()

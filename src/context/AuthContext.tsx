@@ -1,3 +1,7 @@
+/**
+ * Keeps the signed-in Firebase user and their live profile document
+ * (users/{uid}) in React context, so any screen can read the role and status.
+ */
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { onAuthStateChanged, type User } from 'firebase/auth'
 import { onSnapshot } from 'firebase/firestore'
@@ -27,7 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!user) return
     // The profile doc is written right after sign-up, so it may not exist for a
-    // moment — the snapshot listener picks it up as soon as it lands.
+    // moment. The snapshot listener picks it up as soon as it lands.
     return onSnapshot(
       userDoc(user.uid),
       (snap) => {
