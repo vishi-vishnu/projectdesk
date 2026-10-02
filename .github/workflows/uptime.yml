@@ -3,7 +3,7 @@ name: Uptime check
 # Every 6 hours, ask the live site's /api/health whether it is up and fully
 # configured. A failed run sends GitHub's usual failure email.
 # Set the repository variable LIVE_URL (Settings > Secrets and variables >
-# Actions > Variables), for example https://projectdesk.vercel.app
+# Actions > Variables), for example https://projectdesk-three.vercel.app
 on:
   schedule:
     - cron: '17 */6 * * *'

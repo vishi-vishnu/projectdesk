@@ -147,7 +147,7 @@ Without these secrets, the deploy step is skipped and everything else still runs
 ## Step 7 (optional). Turn on the uptime check
 
 1. In GitHub, open **Settings > Secrets and variables > Actions > Variables**.
-2. Add a variable `LIVE_URL` with your site address, for example `https://projectdesk.vercel.app`.
+2. Add a variable `LIVE_URL` with your site address, for example `https://projectdesk-three.vercel.app`.
 
 The **Uptime check** workflow then calls `/api/health` every 6 hours and emails you if it fails. The **Post-deploy smoke test** workflow runs by itself after each production deploy and needs no setup.
 

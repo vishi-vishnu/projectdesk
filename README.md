@@ -17,7 +17,7 @@ Students form teams and upload their review files, guides give feedback and mark
 ![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-000000?logo=vercel&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
-[**Live demo**](#live-demo) &nbsp;·&nbsp; [How to use it](#how-to-use-it) &nbsp;·&nbsp; [DevOps](#devops-how-code-gets-from-a-commit-to-the-live-site) &nbsp;·&nbsp; [Run it locally](#run-it-locally) &nbsp;·&nbsp; [Architecture](#architecture)
+[**Live demo**](https://projectdesk-three.vercel.app) &nbsp;·&nbsp; [How to use it](#how-to-use-it) &nbsp;·&nbsp; [DevOps](#devops-how-code-gets-from-a-commit-to-the-live-site) &nbsp;·&nbsp; [Run it locally](#run-it-locally) &nbsp;·&nbsp; [Architecture](#architecture)
 
 </div>
 
@@ -72,7 +72,7 @@ Everything updates live. When a guide posts feedback, it shows up on the team's 
 
 ## Live demo
 
-**Link:** _coming soon_
+**Link:** [projectdesk-three.vercel.app](https://projectdesk-three.vercel.app)
 
 The sign-in page has one-click demo logins. All demo accounts use the password `Demo@1234`.
 
