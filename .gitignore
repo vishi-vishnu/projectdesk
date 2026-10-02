@@ -49,3 +49,7 @@ sa.json
 
 # Git bundle used to hand over history
 *.bundle
+
+# Firebase service-account keys (never commit these)
+*-firebase-adminsdk-*.json
+service-account*.json

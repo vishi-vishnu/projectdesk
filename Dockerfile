@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # ---- build stage: install deps and compile the static bundle ----
-FROM node:22-alpine AS build
+FROM node:24-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
@@ -17,7 +17,7 @@ ARG VITE_STORAGE_PROVIDER=firebase
 RUN npx vite build
 
 # ---- runtime stage: static files behind nginx (~25 MB image) ----
-FROM nginx:1.27-alpine AS runtime
+FROM nginx:1.31-alpine AS runtime
 LABEL org.opencontainers.image.source="https://github.com/Vishi-vishnu/projectdesk" \
       org.opencontainers.image.description="ProjectDesk: final-year project registration and reviews" \
       org.opencontainers.image.licenses="MIT"

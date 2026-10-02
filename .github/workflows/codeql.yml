@@ -1,0 +1,28 @@
+name: CodeQL
+
+# GitHub's free code scanner for public repositories. It reads the
+# TypeScript code for security problems (for example unsafe input reaching
+# a URL or HTML) and lists anything it finds under Security > Code scanning.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '23 3 * * 1'
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  analyze:
+    name: Scan JavaScript and TypeScript
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: github/codeql-action/init@v4
+        with:
+          languages: javascript-typescript
+          build-mode: none
+      - uses: github/codeql-action/analyze@v4

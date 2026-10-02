@@ -1,30 +1,46 @@
 name: Post-deploy smoke test
 
 # Vercel reports each finished deployment back to GitHub. When a production
-# deploy succeeds, this runs read-only checks against the live URL: the
+# deploy succeeds, this runs read-only checks against the live site: the
 # health endpoint, the sign-in page, SPA routing and the upload guard.
+#
+# It tests the public production domain, not the per-deploy URL, because
+# Vercel puts per-deploy URLs behind a login (Deployment Protection).
+# Change the domain with the repository variable LIVE_URL.
 on:
   deployment_status:
 
 jobs:
   smoke:
-    name: Smoke test ${{ github.event.deployment_status.environment_url }}
+    name: Smoke test production
     if: >-
       github.event.deployment_status.state == 'success' &&
       github.event.deployment.environment == 'Production'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
+      - name: Wait for the production domain to serve this commit
+        env:
+          BASE_URL: ${{ vars.LIVE_URL || 'https://projectdesk-three.vercel.app' }}
+          SHA: ${{ github.event.deployment.sha }}
+        run: |
+          for i in $(seq 1 20); do
+            version=$(curl -s "$BASE_URL/api/health" | sed -n 's/.*"version":"\([^"]*\)".*/\1/p')
+            echo "live version: ${version:-none}, expected: ${SHA::7}"
+            [ "$version" = "${SHA::7}" ] && exit 0
+            sleep 6
+          done
+          echo "::warning::Production did not report ${SHA::7} in time; testing what is live."
       - run: npm run test:smoke
         env:
-          BASE_URL: ${{ github.event.deployment_status.environment_url }}
-      - uses: actions/upload-artifact@v4
+          BASE_URL: ${{ vars.LIVE_URL || 'https://projectdesk-three.vercel.app' }}
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: smoke-report

@@ -1,6 +1,6 @@
-# Weekly pull requests for outdated packages and GitHub Actions.
-# Minor and patch updates are grouped so there is one PR to review, and CI
-# runs the full test suite on it before anything is merged.
+# Weekly pull requests for outdated packages, GitHub Actions and Docker base
+# images. Updates are grouped so there are only a few PRs to review, and CI
+# runs the full test suite on each one before anything is merged.
 version: 2
 updates:
   - package-ecosystem: npm
@@ -10,14 +10,34 @@ updates:
       day: monday
     open-pull-requests-limit: 5
     groups:
-      minor-and-patch:
+      dev-tools:
+        dependency-type: development
         update-types: [minor, patch]
+      app:
+        dependency-type: production
+        update-types: [minor, patch]
+    ignore:
+      # Kept at the version that matches our Node 22 LTS runtime.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+      # jsdom 30 needs Node 22.22+, newer than many local setups.
+      - dependency-name: jsdom
+        update-types: ["version-update:semver-major"]
+
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
       day: monday
+    groups:
+      actions:
+        patterns: ["*"]
+
   - package-ecosystem: docker
     directory: /
     schedule:
       interval: monthly
+    ignore:
+      # Build on the Node LTS line; move to the next LTS on purpose, not automatically.
+      - dependency-name: node
+        update-types: ["version-update:semver-major"]

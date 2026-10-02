@@ -8,8 +8,10 @@
 Students form teams and upload their review files, guides give feedback and marks, and the coordinator sees every team's progress in one place.
 
 [![CI](https://github.com/Vishi-vishnu/projectdesk/actions/workflows/ci.yml/badge.svg)](https://github.com/Vishi-vishnu/projectdesk/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/Vishi-vishnu/projectdesk/actions/workflows/codeql.yml/badge.svg)](https://github.com/Vishi-vishnu/projectdesk/actions/workflows/codeql.yml)
+[![Uptime](https://github.com/Vishi-vishnu/projectdesk/actions/workflows/uptime.yml/badge.svg)](https://github.com/Vishi-vishnu/projectdesk/actions/workflows/uptime.yml)
 ![React](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-7-3178C6?logo=typescript&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-Auth%20%2B%20Firestore-FFA000?logo=firebase&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Tested%20with-Playwright-2EAD33?logo=playwright&logoColor=white)
@@ -99,7 +101,7 @@ A typical semester looks like this:
 
 | Layer | Tools |
 | --- | --- |
-| Frontend | React 19, TypeScript, Vite, Tailwind CSS 4, React Router, React Hook Form + Zod, Radix UI |
+| Frontend | React 19, TypeScript 7, Vite, Tailwind CSS 4, React Router, React Hook Form + Zod, Radix UI |
 | Backend | Firebase Authentication, Cloud Firestore (real-time listeners), Firestore security rules |
 | File storage | Cloudinary (free plan) with signed uploads from a Vercel serverless function |
 | Testing | Vitest, Testing Library, Firebase rules unit testing, Playwright (desktop and mobile) |
@@ -138,7 +140,8 @@ More detail is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 ```mermaid
 flowchart LR
     A[git push] --> B[GitHub Actions CI]
-    B --> C[Lint, type check,<br/>unit tests, build]
+    B --> C[Audit, lint, type check,<br/>unit tests, build]
+    B --> S[CodeQL<br/>security scan]
     B --> D[Security-rules tests<br/>on Firestore emulator]
     B --> E[Playwright E2E<br/>desktop + mobile]
     C --> F[Docker image<br/>build, run, health check]
@@ -149,17 +152,22 @@ flowchart LR
     I -->|main| K[Production]
     K --> L[Post-deploy smoke test]
     M[Every 6 hours] --> N[Uptime check<br/>/api/health]
+    T[git tag v1.2.0] --> R[Release: versioned image<br/>+ release notes]
 ```
 
 | Stage | Tool | What happens |
 | --- | --- | --- |
-| Continuous integration | GitHub Actions ([`ci.yml`](.github/workflows/ci.yml)) | Every push and pull request runs lint, type check, unit tests, the security-rules tests, Playwright end-to-end tests and a production build, as parallel jobs. |
+| Continuous integration | GitHub Actions ([`ci.yml`](.github/workflows/ci.yml)) | Every push and pull request runs a dependency audit, lint, type check, unit tests, the security-rules tests, Playwright end-to-end tests and a production build, as parallel jobs. |
+| Security scanning | CodeQL ([`codeql.yml`](.github/workflows/codeql.yml)), `npm audit` | GitHub's code scanner checks the TypeScript on every push and weekly. CI fails if an app dependency has a known high-severity vulnerability. |
 | Containers | Docker, GitHub Container Registry | A multi-stage [`Dockerfile`](Dockerfile) builds the app with Node and serves it from a small nginx image with a health check. CI builds it, runs it, checks it responds, and on `main` pushes it to `ghcr.io` tagged with the commit. `docker compose up --build` runs the same image locally. |
 | Continuous deployment | Vercel | Every pull request gets its own preview URL. Merging to `main` deploys to production. Firestore rules are deployed from CI once all tests pass. |
 | Release check | Playwright ([`post-deploy.yml`](.github/workflows/post-deploy.yml)) | After each production deploy, read-only smoke tests hit the live URL: the health endpoint, the sign-in page, SPA routing and the upload guard. |
 | Monitoring | GitHub Actions ([`uptime.yml`](.github/workflows/uptime.yml)) | Every 6 hours a job calls `/api/health`. It returns 503 if a server setting is missing, and a failed run sends an email. |
-| Dependencies | Dependabot ([`dependabot.yml`](.github/dependabot.yml)) | Weekly grouped pull requests for npm packages and GitHub Actions, each checked by the full CI pipeline. |
+| Dependencies | Dependabot ([`dependabot.yml`](.github/dependabot.yml)) | Weekly grouped pull requests for npm packages, GitHub Actions and Docker base images, each checked by the full CI pipeline. |
+| Releases | GitHub Actions ([`release.yml`](.github/workflows/release.yml)) | Pushing a tag like `v1.2.0` publishes the Docker image with that version and creates a GitHub Release with generated notes. |
 | Secrets | Vercel environment variables | The Cloudinary secret lives only on the server. Nothing secret is in the repo or the browser bundle. |
+
+Rollback steps, secret rotation and the rest of the runbook are in [docs/DEVOPS.md](docs/DEVOPS.md).
 
 ### What the tests cover
 
@@ -210,6 +218,7 @@ npm run dev:emulator    # terminal 2: app at http://localhost:5173
 | `npm run test:rules` | Security-rules tests on the Firestore emulator |
 | `BASE_URL=https://... npm run test:smoke` | Read-only smoke tests against a live deployment |
 | `npm run docker:up` | Build and run the production Docker image on port 8080 |
+| `npm run seed:live` | Load demo accounts into your Firebase project (key file in Downloads) |
 | `npm run build` | Production build |
 
 </details>

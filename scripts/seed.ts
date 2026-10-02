@@ -2,12 +2,20 @@
  * Seeds demo accounts and data.
  *
  *   Emulator:   npm run seed            (run while `npm run emulators` is up)
- *   Production: GOOGLE_APPLICATION_CREDENTIALS=./service-account.json \
- *               FIREBASE_PROJECT_ID=your-project npm run seed -- --production
+ *   Production: npm run seed:live
+ *
+ * For production the script needs a service-account key. It uses, in order:
+ *   1. GOOGLE_APPLICATION_CREDENTIALS, if you set it
+ *   2. the path after --key, for example: npm run seed:live -- --key C:\keys\sa.json
+ *   3. the newest "*-firebase-adminsdk-*.json" file in your Downloads folder
+ * The project id is read from the key file.
  *
  * Every write is an upsert keyed by fixed ids, so running it twice is safe.
  */
-import { applicationDefault, initializeApp } from 'firebase-admin/app'
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
+import { homedir } from 'node:os'
+import { join } from 'node:path'
+import { applicationDefault, cert, initializeApp } from 'firebase-admin/app'
 import { getAuth } from 'firebase-admin/auth'
 import { getFirestore, Timestamp, type WriteBatch } from 'firebase-admin/firestore'
 import { buildSeed, DEMO_PASSWORD } from '../src/testing/seedData.ts'
@@ -24,13 +32,43 @@ if (production && usingEmulator) {
   process.exit(1)
 }
 
-const projectId = process.env.FIREBASE_PROJECT_ID ?? (production ? undefined : 'demo-projectdesk')
+/** Finds the service-account key file for production seeding. */
+function findKeyFile(): string | null {
+  if (process.env.GOOGLE_APPLICATION_CREDENTIALS) return process.env.GOOGLE_APPLICATION_CREDENTIALS
+  const flag = process.argv.indexOf('--key')
+  if (flag !== -1 && process.argv[flag + 1]) return process.argv[flag + 1]
+  const downloads = join(homedir(), 'Downloads')
+  if (!existsSync(downloads)) return null
+  const keys = readdirSync(downloads)
+    .filter((f) => /-firebase-adminsdk-.*\.json$/.test(f))
+    .map((f) => join(downloads, f))
+    .sort((a, b) => statSync(b).mtimeMs - statSync(a).mtimeMs)
+  return keys[0] ?? null
+}
+
+let projectId = process.env.FIREBASE_PROJECT_ID ?? (production ? undefined : 'demo-projectdesk')
+let keyFile: string | null = null
+if (production) {
+  keyFile = findKeyFile()
+  if (!keyFile || !existsSync(keyFile)) {
+    console.error('No service-account key found. Download one from Firebase: Project settings > Service accounts >')
+    console.error('Generate new private key. Leave it in your Downloads folder, then run npm run seed:live again.')
+    process.exit(1)
+  }
+  const key = JSON.parse(readFileSync(keyFile, 'utf8')) as { project_id?: string; client_email?: string }
+  projectId ??= key.project_id
+  console.log(`Using key ${keyFile} for project ${projectId}`)
+}
 if (!projectId) {
   console.error('Set FIREBASE_PROJECT_ID for production seeding.')
   process.exit(1)
 }
 
-initializeApp(production ? { projectId, credential: applicationDefault() } : { projectId })
+initializeApp(
+  production
+    ? { projectId, credential: keyFile ? cert(JSON.parse(readFileSync(keyFile, 'utf8'))) : applicationDefault() }
+    : { projectId },
+)
 const db = getFirestore()
 const auth = getAuth()
 const ts = (d: Date) => Timestamp.fromDate(d)

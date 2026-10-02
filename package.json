@@ -9,6 +9,7 @@
     "dev:fake": "vite --mode fake",
     "emulators": "npx -y firebase-tools@15.32.0 emulators:start --project demo-projectdesk",
     "seed": "tsx scripts/seed.ts",
+    "seed:live": "tsx scripts/seed.ts --production",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "lint": "oxlint",
@@ -58,7 +59,7 @@
     "oxlint": "^1.81.0",
     "tailwindcss": "^4.3.3",
     "tsx": "^4.23.15",
-    "typescript": "~6.0.2",
+    "typescript": "~7.0.2",
     "vite": "^8.3.0",
     "vitest": "^5.0.3"
   },

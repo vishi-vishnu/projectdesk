@@ -118,20 +118,14 @@ Nobody can sign up as a coordinator from the app. This is on purpose, and the se
 
 **Option B: demo accounts and sample teams (best for a portfolio)**
 
-1. In Firebase **Project settings > Service accounts**, click **Generate new private key**. Save the file **outside** the project folder, for example `C:\keys\projectdesk-sa.json`.
+1. In Firebase **Project settings > Service accounts**, click **Generate new private key**. Leave the downloaded `.json` file in your **Downloads** folder. Don't open or edit it, and never put it in the project folder.
 2. In the project folder, run:
 
-   ```powershell
-   # Windows PowerShell
-   $env:GOOGLE_APPLICATION_CREDENTIALS="C:\keys\projectdesk-sa.json"
-   $env:FIREBASE_PROJECT_ID="<your-project-id>"
-   npm run seed -- --production
+   ```bash
+   npm run seed:live
    ```
 
-   ```bash
-   # macOS / Linux
-   GOOGLE_APPLICATION_CREDENTIALS=~/keys/projectdesk-sa.json FIREBASE_PROJECT_ID=<your-project-id> npm run seed -- --production
-   ```
+   The script finds the newest `*-firebase-adminsdk-*.json` file in Downloads and reads the project id from it. To use a key somewhere else, run `npm run seed:live -- --key "C:\path\to\key.json"`.
 
 This creates the coordinator, guide and student demo accounts (password `Demo@1234`) and five sample teams. Running it again is safe.
 
