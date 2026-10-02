@@ -1,0 +1,32 @@
+name: Post-deploy smoke test
+
+# Vercel reports each finished deployment back to GitHub. When a production
+# deploy succeeds, this runs read-only checks against the live URL: the
+# health endpoint, the sign-in page, SPA routing and the upload guard.
+on:
+  deployment_status:
+
+jobs:
+  smoke:
+    name: Smoke test ${{ github.event.deployment_status.environment_url }}
+    if: >-
+      github.event.deployment_status.state == 'success' &&
+      github.event.deployment.environment == 'Production'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:smoke
+        env:
+          BASE_URL: ${{ github.event.deployment_status.environment_url }}
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: smoke-report
+          path: playwright-report
+          retention-days: 7

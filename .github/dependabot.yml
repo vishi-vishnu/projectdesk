@@ -1,0 +1,23 @@
+# Weekly pull requests for outdated packages and GitHub Actions.
+# Minor and patch updates are grouped so there is one PR to review, and CI
+# runs the full test suite on it before anything is merged.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: monthly

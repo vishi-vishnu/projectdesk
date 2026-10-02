@@ -30,6 +30,41 @@ jobs:
           path: dist
           retention-days: 7
 
+  docker:
+    name: Docker image (build, run, publish)
+    needs: [quality]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build the image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: projectdesk:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Run the container and check it serves the app
+        run: |
+          docker run -d --name web -p 8080:8080 projectdesk:ci
+          for i in $(seq 1 30); do curl -fsS http://localhost:8080/healthz && break; sleep 1; done
+          curl -fsS http://localhost:8080/ | grep -q '<div id="root">'
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/teams/any)" = 200
+          docker image ls projectdesk:ci --format 'Image size: {{.Size}}'
+      - name: Publish to GitHub Container Registry
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}"
+          docker tag projectdesk:ci "$IMAGE:latest"
+          docker tag projectdesk:ci "$IMAGE:${GITHUB_SHA::7}"
+          docker push "$IMAGE:latest"
+          docker push "$IMAGE:${GITHUB_SHA::7}"
+
   rules:
     name: Firestore security rules
     runs-on: ubuntu-latest

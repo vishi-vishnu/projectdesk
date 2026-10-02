@@ -82,7 +82,7 @@ The free plan allows files up to 10 MB, so the app rejects anything bigger.
 1. Sign in at <https://vercel.com> with **the same GitHub account** that owns the repository.
 2. Click **Add New > Project**, find `projectdesk` and click **Import**. If it isn't listed, click **Adjust GitHub App Permissions** and give Vercel access to the repository.
 3. Vercel detects **Vite**. Leave the build settings as they are.
-4. Open **Environment Variables** and add these:
+4. Open **Environment Variables** and add these. Tip: click in the first **Key** box and paste all the lines at once in `NAME=value` form; Vercel splits them into rows.
 
    | Name | Value |
    | --- | --- |
@@ -144,6 +144,13 @@ The CI pipeline can publish `firestore.rules` for you after all tests pass. In G
 
 Without these secrets, the deploy step is skipped and everything else still runs.
 
+## Step 7 (optional). Turn on the uptime check
+
+1. In GitHub, open **Settings > Secrets and variables > Actions > Variables**.
+2. Add a variable `LIVE_URL` with your site address, for example `https://projectdesk.vercel.app`.
+
+The **Uptime check** workflow then calls `/api/health` every 6 hours and emails you if it fails. The **Post-deploy smoke test** workflow runs by itself after each production deploy and needs no setup.
+
 ## If something goes wrong
 
 | What you see | How to fix it |
@@ -153,3 +160,4 @@ Without these secrets, the deploy step is skipped and everything else still runs
 | Upload fails with "not configured on the server" | Check the Cloudinary variables and `FIREBASE_PROJECT_ID` in Vercel, then redeploy. |
 | A PDF opens as a blank page or a 401 error | Turn on PDF delivery in Cloudinary (Step 3). |
 | `git push` says permission denied to another account | Use the `git remote set-url` command from Step 1. |
+| `/api/health` returns 503 | Open the response: `checks` shows which server setting is missing in Vercel. |

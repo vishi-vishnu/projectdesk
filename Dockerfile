@@ -18,6 +18,9 @@ RUN npx vite build
 
 # ---- runtime stage: static files behind nginx (~25 MB image) ----
 FROM nginx:1.27-alpine AS runtime
+LABEL org.opencontainers.image.source="https://github.com/Vishi-vishnu/projectdesk" \
+      org.opencontainers.image.description="ProjectDesk: final-year project registration and reviews" \
+      org.opencontainers.image.licenses="MIT"
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist /usr/share/nginx/html
 EXPOSE 8080
