@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Check, FileText, MessageSquare } from 'lucide-react'
 import { Logo } from '@/components/layout/Logo'
+import { ThemeToggle } from '@/components/layout/ThemeToggle'
 
 const stages = [
   { name: 'Topic approval', state: 'Approved', tone: 'text-ok' },
@@ -14,7 +15,10 @@ export function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
       <div className="flex flex-col px-5 py-6 sm:px-10">
-        <Logo />
+        <div className="flex items-center justify-between">
+          <Logo />
+          <ThemeToggle className="-mr-2" />
+        </div>
         <div className="flex flex-1 items-center justify-center py-10">
           <div className="w-full max-w-[380px]">{children}</div>
         </div>

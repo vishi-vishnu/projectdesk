@@ -8,6 +8,7 @@ import { useSignOut } from '@/hooks/useSignOut'
 import { Avatar, cn, Menu, MenuContent, MenuItem, MenuLabel, MenuSeparator, MenuTrigger } from '@/components/ui'
 import { Logo } from './Logo'
 import { NotificationBell } from './NotificationBell'
+import { ThemeToggle } from './ThemeToggle'
 import { navFor, roleLabel } from './nav'
 
 const themeOptions: { value: ThemePreference; label: string; icon: typeof Sun }[] = [
@@ -29,7 +30,12 @@ function Sidebar({ onNavigate, showBell = true }: { onNavigate?: () => void; sho
     <div className="flex h-full flex-col">
       <div className="flex h-14 items-center justify-between pr-2 pl-4">
         <Logo />
-        {showBell && <NotificationBell />}
+        {showBell && (
+          <div className="flex items-center">
+            <ThemeToggle />
+            <NotificationBell />
+          </div>
+        )}
       </div>
 
       <div className="mx-3 mb-3 rounded-md border border-line bg-surface px-3 py-2">
@@ -118,6 +124,7 @@ export function AppShell() {
       <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-line bg-surface/95 px-4 backdrop-blur lg:hidden">
         <Logo />
         <div className="flex items-center gap-1">
+          <ThemeToggle />
           <NotificationBell />
           <button
             onClick={() => setOpen(true)}

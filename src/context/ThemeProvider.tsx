@@ -4,17 +4,18 @@ import { THEME_STORAGE_KEY, ThemeContext, type ThemePreference } from './theme-c
 function readPreference(): ThemePreference {
   try {
     const v = localStorage.getItem(THEME_STORAGE_KEY)
-    return v === 'light' || v === 'dark' ? v : 'system'
+    return v === 'dark' || v === 'system' ? v : 'light'
   } catch {
-    return 'system'
+    return 'light'
   }
 }
 
 const media = () => window.matchMedia('(prefers-color-scheme: dark)')
 
 /**
- * Light / dark / follow-the-system theme. The choice is saved per browser and
- * applied as data-theme on <html>; index.css swaps the colour tokens.
+ * Light / dark / follow-the-system theme. Light is the default; the choice is
+ * saved per browser and applied as data-theme on <html>, and index.css swaps
+ * the colour tokens.
  */
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [preference, setPreferenceState] = useState<ThemePreference>(readPreference)
@@ -41,8 +42,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       setPreference: (p: ThemePreference) => {
         setPreferenceState(p)
         try {
-          if (p === 'system') localStorage.removeItem(THEME_STORAGE_KEY)
-          else localStorage.setItem(THEME_STORAGE_KEY, p)
+          localStorage.setItem(THEME_STORAGE_KEY, p)
         } catch {
           /* storage unavailable: keep it for this visit only */
         }

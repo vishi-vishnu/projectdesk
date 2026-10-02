@@ -10,7 +10,7 @@ export interface ThemeState {
 }
 
 export const ThemeContext = createContext<ThemeState>({
-  preference: 'system',
+  preference: 'light',
   resolved: 'light',
   setPreference: () => {},
 })

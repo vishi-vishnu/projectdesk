@@ -71,6 +71,23 @@ test('dark theme can be chosen from the account menu and is remembered', async (
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
 })
 
+test('light is the default and the header toggle switches themes, even on a dark system', async ({ browser }) => {
+  const context = await browser.newContext({ colorScheme: 'dark' })
+  const page = await context.newPage()
+  await page.goto('/login')
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
+  await page.getByRole('button', { name: 'Switch to dark mode' }).click()
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+
+  await signIn(page, users.arjun)
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+  await page.getByRole('button', { name: 'Switch to light mode' }).first().click()
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
+  await page.reload()
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
+  await context.close()
+})
+
 test('a user changes their password and signs in with the new one', async ({ page }) => {
   await signIn(page, users.meera)
   await page.goto('/profile')
