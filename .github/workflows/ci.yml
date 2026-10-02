@@ -56,6 +56,8 @@ jobs:
           for i in $(seq 1 30); do curl -fsS http://localhost:8080/healthz && break; sleep 1; done
           curl -fsS http://localhost:8080/ | grep -q '<div id="root">'
           test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/teams/any)" = 200
+          # /api/ is forwarded to the Vercel functions by nginx
+          curl -s http://localhost:8080/api/health | grep -q '"version"'
           docker image ls projectdesk:ci --format 'Image size: {{.Size}}'
       - name: Publish to GitHub Container Registry
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -66,6 +68,56 @@ jobs:
           docker tag projectdesk:ci "$IMAGE:${GITHUB_SHA::7}"
           docker push "$IMAGE:latest"
           docker push "$IMAGE:${GITHUB_SHA::7}"
+
+  kubernetes:
+    name: Kubernetes deploy test (kind)
+    needs: [quality]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      - name: Build the image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          load: true
+          tags: projectdesk:ci
+          cache-from: type=gha
+      - name: Start a local Kubernetes cluster
+        uses: helm/kind-action@v1
+        with:
+          cluster_name: projectdesk
+      - name: Load the image into the cluster
+        run: kind load docker-image projectdesk:ci --name projectdesk
+      - name: Deploy with kubectl and wait for the rollout
+        run: |
+          kubectl apply -k k8s/
+          kubectl -n projectdesk set image deployment/projectdesk web=projectdesk:ci
+          kubectl -n projectdesk rollout status deployment/projectdesk --timeout=180s
+          kubectl -n projectdesk get pods -o wide
+      - name: Call the app through the Service
+        run: |
+          kubectl -n projectdesk port-forward service/projectdesk 8080:80 &
+          for i in $(seq 1 15); do curl -fsS http://localhost:8080/healthz && break; sleep 2; done
+          curl -fsS http://localhost:8080/ | grep -q '<div id="root">'
+      - name: Show pod details if something failed
+        if: failure()
+        run: |
+          kubectl -n projectdesk describe pods
+          kubectl -n projectdesk logs -l app.kubernetes.io/name=projectdesk --tail=50
+
+  terraform:
+    name: Terraform (format and validate)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra/terraform
+    steps:
+      - uses: actions/checkout@v7
+      - uses: hashicorp/setup-terraform@v4
+      - run: terraform fmt -check -diff
+      - run: terraform init -backend=false
+      - run: terraform validate
 
   rules:
     name: Firestore security rules

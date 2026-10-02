@@ -1,0 +1,7 @@
+# Copy to terraform.tfvars (git ignores it) and fill in the two secrets.
+# Everything else has a sensible default in variables.tf.
+cloudinary_api_key    = "your-cloudinary-api-key"
+cloudinary_api_secret = "your-cloudinary-api-secret"
+
+# Build a second, separate copy instead of the main project:
+# project_name = "projectdesk-staging"

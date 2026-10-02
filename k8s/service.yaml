@@ -1,0 +1,16 @@
+# A stable address inside the cluster that load-balances across the pods.
+apiVersion: v1
+kind: Service
+metadata:
+  name: projectdesk
+  namespace: projectdesk
+  labels:
+    app.kubernetes.io/name: projectdesk
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: projectdesk
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

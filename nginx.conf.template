@@ -1,3 +1,5 @@
+# nginx config for the Docker image. The official nginx image fills in
+# ${API_ORIGIN} from the environment when the container starts.
 server {
   listen 8080;
   root /usr/share/nginx/html;
@@ -10,12 +12,22 @@ server {
   gzip on;
   gzip_types text/css application/javascript application/json image/svg+xml;
 
+  # Liveness and readiness probes (Docker HEALTHCHECK, Kubernetes).
   location = /healthz { access_log off; return 200 'ok'; }
+
+  # The API runs as Vercel serverless functions. Forwarding /api/ there lets
+  # this same image run anywhere (Docker, Kubernetes) with working uploads.
+  location /api/ {
+    proxy_pass ${API_ORIGIN};
+    proxy_ssl_server_name on;
+    proxy_http_version 1.1;
+  }
 
   # Hashed build assets never change, so cache them for a year.
   location /assets/ {
     expires 1y;
     add_header Cache-Control "public, immutable";
+    add_header X-Content-Type-Options nosniff always;
   }
 
   # Client-side routing: unknown paths fall back to the SPA shell.

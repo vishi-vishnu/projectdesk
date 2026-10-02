@@ -41,3 +41,8 @@ updates:
       # Build on the Node LTS line; move to the next LTS on purpose, not automatically.
       - dependency-name: node
         update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: terraform
+    directory: /infra/terraform
+    schedule:
+      interval: monthly

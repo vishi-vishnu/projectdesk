@@ -1,0 +1,9 @@
+# Settings the container reads at start-up. Nothing secret lives here: the
+# Cloudinary secret stays on Vercel, behind the /api/ functions.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: projectdesk-config
+  namespace: projectdesk
+data:
+  API_ORIGIN: https://projectdesk-three.vercel.app

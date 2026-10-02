@@ -1,0 +1,22 @@
+# Optional: scale between 2 and 5 pods on CPU. Needs metrics-server, which
+# minikube adds with `minikube addons enable metrics-server`.
+#   kubectl apply -f k8s/hpa.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: projectdesk
+  namespace: projectdesk
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: projectdesk
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70

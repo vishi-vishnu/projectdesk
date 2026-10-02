@@ -16,6 +16,8 @@ Students form teams and upload their review files, guides give feedback and mark
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Tested%20with-Playwright-2EAD33?logo=playwright&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-GHCR-2496ED?logo=docker&logoColor=white)
+![Kubernetes](https://img.shields.io/badge/Kubernetes-kind-326CE5?logo=kubernetes&logoColor=white)
+![Terraform](https://img.shields.io/badge/Terraform-Vercel-7B42BC?logo=terraform&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-000000?logo=vercel&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
@@ -105,7 +107,7 @@ A typical semester looks like this:
 | Backend | Firebase Authentication, Cloud Firestore (real-time listeners), Firestore security rules |
 | File storage | Cloudinary (free plan) with signed uploads from a Vercel serverless function |
 | Testing | Vitest, Testing Library, Firebase rules unit testing, Playwright (desktop and mobile) |
-| DevOps | GitHub Actions (CI, post-deploy smoke tests, uptime checks), Docker multi-stage build published to GHCR, Vercel hosting with preview deployments, Dependabot |
+| DevOps | GitHub Actions (CI, post-deploy smoke tests, uptime checks), Docker multi-stage build published to GHCR, Kubernetes manifests tested on kind, Terraform for Vercel, Vercel hosting with preview deployments, Dependabot, CodeQL |
 
 ## Architecture
 
@@ -145,6 +147,8 @@ flowchart LR
     B --> D[Security-rules tests<br/>on Firestore emulator]
     B --> E[Playwright E2E<br/>desktop + mobile]
     C --> F[Docker image<br/>build, run, health check]
+    C --> KC[Kubernetes deploy test<br/>on a kind cluster]
+    B --> TF[Terraform<br/>fmt + validate]
     F -->|main only| G[(GitHub Container<br/>Registry)]
     C & D & E -->|main only| H[Deploy Firestore rules]
     A --> I[Vercel build]
@@ -160,6 +164,8 @@ flowchart LR
 | Continuous integration | GitHub Actions ([`ci.yml`](.github/workflows/ci.yml)) | Every push and pull request runs a dependency audit, lint, type check, unit tests, the security-rules tests, Playwright end-to-end tests and a production build, as parallel jobs. |
 | Security scanning | CodeQL ([`codeql.yml`](.github/workflows/codeql.yml)), `npm audit` | GitHub's code scanner checks the TypeScript on every push and weekly. CI fails if an app dependency has a known high-severity vulnerability. |
 | Containers | Docker, GitHub Container Registry | A multi-stage [`Dockerfile`](Dockerfile) builds the app with Node and serves it from a small nginx image with a health check. CI builds it, runs it, checks it responds, and on `main` pushes it to `ghcr.io` tagged with the commit. `docker compose up --build` runs the same image locally. |
+| Kubernetes | kind in CI, manifests in [`k8s/`](k8s) | The image runs as a Deployment with 2 pods, readiness and liveness probes, CPU and memory limits and rolling updates, behind a Service. CI creates a throwaway cluster, deploys it, waits for the rollout and calls the app. [How to run it locally](k8s/README.md). |
+| Infrastructure as code | Terraform, files in [`infra/terraform`](infra/terraform) | The Vercel project (GitHub link, build settings, all environment variables) is described in code, so the hosting can be rebuilt with `terraform apply`. CI runs `terraform fmt` and `terraform validate`. [How to use it](infra/terraform/README.md). |
 | Continuous deployment | Vercel | Every pull request gets its own preview URL. Merging to `main` deploys to production. Firestore rules are deployed from CI once all tests pass. |
 | Release check | Playwright ([`post-deploy.yml`](.github/workflows/post-deploy.yml)) | After each production deploy, read-only smoke tests hit the live URL: the health endpoint, the sign-in page, SPA routing and the upload guard. |
 | Monitoring | GitHub Actions ([`uptime.yml`](.github/workflows/uptime.yml)) | Every 6 hours a job calls `/api/health`. It returns 503 if a server setting is missing, and a failed run sends an email. |
@@ -175,7 +181,7 @@ Rollback steps, secret rotation and the rest of the runbook are in [docs/DEVOPS.
 | --- | --- |
 | Unit | Deadline and progress logic, guide auto-assignment, notifications, file checks, CSV export, upload signatures, health report |
 | Security rules | 39 tests with 81 allow and deny checks across every collection |
-| End-to-end | A full semester across all three roles, resubmissions, file previews, upload limits, approvals, announcements, auto-assignment, password change, dark mode and the mobile layout |
+| End-to-end | A full semester across all three roles, resubmissions, file previews, upload limits, approvals, announcements, auto-assignment, password change, the light/dark toggle and the mobile layout |
 | Smoke (live site) | Health endpoint, sign-in page, deep links and the upload guard after every production deploy |
 
 The longest end-to-end test plays out a whole semester. A student registers and creates a team, and a classmate joins with the code. The coordinator assigns a guide, who approves the topic. The student uploads Review 1 and asks a doubt, and the guide replies, resolves it and gives marks.
@@ -229,6 +235,8 @@ To deploy your own copy for free (Firebase Spark, Cloudinary free plan and Verce
 
 ```
 api/                   Vercel serverless functions: signed uploads and /api/health
+k8s/                   Kubernetes manifests (Deployment, Service, probes)
+infra/terraform/       The Vercel project and its settings as code
 e2e/                   Playwright end-to-end tests
 scripts/seed.ts        Demo data for the emulator or a real project
 src/

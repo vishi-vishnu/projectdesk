@@ -1,19 +1,13 @@
-# Run the production build locally in the same nginx image CI publishes:
+# Run the production image locally:
 #   docker compose up --build      then open http://localhost:8080
-# Build args are read from your .env file (the Firebase web config is public).
+# The image has the public Firebase web config built in; /api/ calls are
+# forwarded to the Vercel functions (API_ORIGIN).
 services:
   web:
-    build:
-      context: .
-      args:
-        VITE_FIREBASE_API_KEY: ${VITE_FIREBASE_API_KEY:-}
-        VITE_FIREBASE_AUTH_DOMAIN: ${VITE_FIREBASE_AUTH_DOMAIN:-}
-        VITE_FIREBASE_PROJECT_ID: ${VITE_FIREBASE_PROJECT_ID:-}
-        VITE_FIREBASE_STORAGE_BUCKET: ${VITE_FIREBASE_STORAGE_BUCKET:-}
-        VITE_FIREBASE_MESSAGING_SENDER_ID: ${VITE_FIREBASE_MESSAGING_SENDER_ID:-}
-        VITE_FIREBASE_APP_ID: ${VITE_FIREBASE_APP_ID:-}
-        VITE_STORAGE_PROVIDER: ${VITE_STORAGE_PROVIDER:-firebase}
+    build: .
     image: projectdesk:local
     ports:
       - "8080:8080"
+    environment:
+      API_ORIGIN: ${API_ORIGIN:-https://projectdesk-three.vercel.app}
     restart: unless-stopped

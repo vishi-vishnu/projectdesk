@@ -8,6 +8,8 @@ How ProjectDesk is built, tested, shipped and watched, in plain words. The last 
 | --- | --- | --- |
 | Every push and pull request | **CI**: dependency audit, lint, type check, unit tests, build, security-rules tests, Playwright E2E, Docker build and run | GitHub > Actions > CI |
 | Every push and pull request | **CodeQL** security scan of the TypeScript code | GitHub > Security > Code scanning |
+| Every push and pull request | **Kubernetes test**: a throwaway kind cluster, deploy, wait for rollout, call the app | GitHub > Actions > CI |
+| Every push and pull request | **Terraform** `fmt` and `validate` on `infra/terraform` | GitHub > Actions > CI |
 | Push to `main`, all green | Docker image pushed to GitHub Container Registry; Firestore rules deployed (if the secret is set) | GitHub > Packages |
 | Every pull request | Vercel builds a **preview** site with its own link | The Vercel bot comment on the PR |
 | Push to `main` | Vercel deploys **production** | vercel.com > projectdesk |
@@ -32,6 +34,12 @@ How ProjectDesk is built, tested, shipped and watched, in plain words. The last 
 - **Secret:** a password-like value (API secret, service-account key). Kept in Vercel or GitHub settings, never in the code.
 - **Infrastructure as code:** settings kept as files in the repo (`firestore.rules`, `firestore.indexes.json`, `vercel.json`, `Dockerfile`), reviewed like code.
 - **Rollback:** going back to the last good version.
+- **Kubernetes:** runs containers across machines and keeps them healthy. You describe what you want (2 copies, these limits) and it makes it so.
+- **Pod:** one running copy of the container. **Deployment:** keeps the right number of pods and replaces them during an update. **Service:** one stable address in front of the pods.
+- **Readiness / liveness probe:** Kubernetes calls `/healthz`; not ready means no traffic, not alive means restart.
+- **Rolling update:** new pods start before old ones stop, so users see no downtime.
+- **kind:** "Kubernetes in Docker", a small cluster for laptops and CI.
+- **Terraform:** writes infrastructure as code. `plan` previews changes, `apply` makes them, `state` remembers what exists.
 
 ## Runbook
 
@@ -40,6 +48,19 @@ How ProjectDesk is built, tested, shipped and watched, in plain words. The last 
 1. Open vercel.com > projectdesk > **Deployments**.
 2. Find the last deployment that worked, open the menu (three dots) and choose **Promote to Production**.
 3. Fix the bug on a branch, let CI pass, then merge.
+
+### Run it on Kubernetes
+
+See [k8s/README.md](../k8s/README.md). Short version with Docker Desktop's Kubernetes turned on:
+
+```bash
+kubectl apply -k k8s/
+kubectl -n projectdesk port-forward service/projectdesk 8080:80   # then open http://localhost:8080
+```
+
+### Rebuild the Vercel setup from code
+
+See [infra/terraform/README.md](../infra/terraform/README.md): `terraform init`, `terraform plan`, `terraform apply`.
 
 ### Run the production image on your computer
 
